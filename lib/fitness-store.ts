@@ -130,32 +130,25 @@ export function useMessages() {
   return data || []
 }
 
-// Hook pobierający Twoich znajomych z tabeli relacji
 export function useFriends() {
   const { user } = useAuth()
   const { data } = useSWR<Friend[]>(user ? `friends-list-${user.id}` : null, async () => {
-    // 1. Pobierz ID znajomych z tabeli friends
     const { data: friendships } = await supabase
       .from('friends')
       .select('friend_id')
       .eq('user_id', user?.id)
     
     if (!friendships || friendships.length === 0) return []
-
     const friendIds = friendships.map(f => f.friend_id)
-
-    // 2. Pobierz profile tych osób
     const { data: profiles } = await supabase
       .from('profiles')
       .select('id, display_name, level, status_message')
       .in('id', friendIds)
-
     return profiles || []
   })
   return data || []
 }
 
-// Hook pobierający wszystkich użytkowników (do wyszukiwarki)
 export function useAllUsers() {
   const { data } = useSWR<Friend[]>("all-profiles", async () => {
     const { data: users } = await supabase
@@ -182,11 +175,23 @@ export async function logoutUser() {
   if (typeof window !== "undefined") { localStorage.clear(); window.location.reload() }
 }
 
+/**
+ * POPRAWIONE: Teraz zwraca obiekt success, aby widok mógł go obsłużyć
+ */
 export async function updateUsername(name: string) {
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session?.user) return
-  await supabase.from('profiles').update({ display_name: name }).eq('id', session.user.id)
-  mutate("auth-user")
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) return { success: false, error: "No session" }
+    
+    const { error } = await supabase.from('profiles').update({ display_name: name }).eq('id', session.user.id)
+    if (error) throw error
+    
+    mutate("auth-user")
+    return { success: true }
+  } catch (error) {
+    console.error("Update username error:", error)
+    return { success: false, error }
+  }
 }
 
 // --- AKCJE ZNAJOMYCH ---

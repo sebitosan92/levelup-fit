@@ -17,7 +17,7 @@ import {
   Trophy,
   Droplets,
   Lock,
-  Loader2 // Dodano ikonę ładowania
+  Loader2
 } from "lucide-react"
 import {
   resetAllData,
@@ -38,7 +38,7 @@ export function SettingsView() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [newName, setNewName] = useState("")
-  const [isUpdating, setIsUpdating] = useState(false) // Stan ładowania dla nazwy
+  const [isUpdating, setIsUpdating] = useState(false)
 
   const totalWorkouts = workoutLog.length
   
@@ -58,14 +58,18 @@ export function SettingsView() {
     if (newName.trim() && newName !== auth?.display_name) {
       setIsUpdating(true)
       try {
+        // WYWOŁANIE POPRAWIONEJ FUNKCJI ZE STORE
         const result = await updateUsername(newName.trim())
-        if (result.success) {
+        
+        // TypeScript teraz poprawnie widzi 'result.success'
+        if (result?.success) {
           setIsEditing(false)
         } else {
-          alert("Error: " + result.error)
+          alert("Error updating profile: " + (result?.error || "Unknown error"))
         }
       } catch (err) {
-        console.error(err)
+        console.error("Update failed:", err)
+        alert("System failure during update.")
       } finally {
         setIsUpdating(false)
       }
@@ -117,10 +121,10 @@ export function SettingsView() {
                       <Loader2 size={16} className="animate-spin text-neon-purple" />
                     ) : (
                       <>
-                        <button onClick={handleSaveName} className="text-neon-green p-1 hover:bg-white/5 rounded">
+                        <button onClick={handleSaveName} className="text-neon-green p-1 hover:bg-white/5 rounded transition-colors">
                           <Check size={16} />
                         </button>
-                        <button onClick={() => setIsEditing(false)} className="text-red-400 p-1 hover:bg-white/5 rounded">
+                        <button onClick={() => setIsEditing(false)} className="text-red-400 p-1 hover:bg-white/5 rounded transition-colors">
                           <X size={16} />
                         </button>
                       </>
