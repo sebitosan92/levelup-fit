@@ -3,17 +3,14 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  Trash2,
   RotateCcw,
   Zap,
   Info,
-  ChevronRight,
   LogOut,
   User,
   Edit3,
   Check,
   X,
-  Target,
   Trophy,
   Droplets,
   Lock,
@@ -22,27 +19,26 @@ import {
 import {
   resetAllData,
   useFitnessData,
-  useWaterData,
   useWorkoutLog,
   useAuth,
   logoutUser,
   updateUsername,
+  useLifetimeBoxes
 } from "@/lib/fitness-store"
 
 export function SettingsView() {
   const fitnessData = useFitnessData()
-  const waterData = useWaterData()
   const workoutLog = useWorkoutLog()
   const auth = useAuth()
-  
+  const totalLootBoxes = useLifetimeBoxes()
+
   const [showConfirm, setShowConfirm] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [newName, setNewName] = useState("")
   const [isUpdating, setIsUpdating] = useState(false)
 
   const totalWorkouts = workoutLog.length
-  
-  // Synchronizacja newName z auth.display_name przy wejściu w tryb edycji
+
   useEffect(() => {
     if (isEditing && auth?.display_name) {
       setNewName(auth.display_name)
@@ -58,18 +54,11 @@ export function SettingsView() {
     if (newName.trim() && newName !== auth?.display_name) {
       setIsUpdating(true)
       try {
-        // WYWOŁANIE POPRAWIONEJ FUNKCJI ZE STORE
         const result = await updateUsername(newName.trim())
-        
-        // TypeScript teraz poprawnie widzi 'result.success'
-        if (result?.success) {
-          setIsEditing(false)
-        } else {
-          alert("Error updating profile: " + (result?.error || "Unknown error"))
-        }
+        if (result?.success) setIsEditing(false)
+        else alert("Błąd: " + (result?.error || "Nieznany błąd"))
       } catch (err) {
-        console.error("Update failed:", err)
-        alert("System failure during update.")
+        alert("Awaria systemu.")
       } finally {
         setIsUpdating(false)
       }
@@ -79,173 +68,136 @@ export function SettingsView() {
   }
 
   return (
-    <motion.div
-      className="px-4 pb-24"
-      initial={{ opacity: 0 }}
+    // Dodano max-w-md i mx-auto dla wyrównania wielkości do reszty apki
+    <motion.div 
+      className="max-w-md mx-auto px-4 pb-24 w-full" 
+      initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }}
     >
-      <h2 className="text-xl font-black italic tracking-tighter font-mono mb-6 uppercase">
-        Settings & Protocol
+      <h2 className="text-2xl font-black italic tracking-tighter font-mono mb-8 uppercase text-white">
+        Ustawienia i Protokół
       </h2>
 
-      {/* --- PROFILE CARD --- */}
+      {/* PROFIL - POWIĘKSZONY */}
       {auth && (
-        <motion.div
-          className="rounded-2xl glass-card p-5 mb-4 border border-white/10"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-neon-purple/15 flex items-center justify-center border border-neon-purple/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-              <User className="w-7 h-7 text-neon-purple" />
+        <div className="rounded-2xl glass-card p-6 mb-6 border border-white/10 bg-white/5 shadow-xl">
+          <div className="flex items-center gap-5">
+            <div className="w-16 h-16 rounded-2xl bg-neon-purple/20 flex items-center justify-center border border-neon-purple/40 shadow-[0_0_20px_rgba(168,85,247,0.25)]">
+              <User className="w-8 h-8 text-neon-purple" />
             </div>
             <div className="flex-1 overflow-hidden">
               <AnimatePresence mode="wait">
                 {isEditing ? (
                   <motion.div 
-                    key="editing"
-                    initial={{ opacity: 0, x: -10 }}
+                    key="editing" 
+                    initial={{ opacity: 0, x: -10 }} 
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 10 }}
                     className="flex items-center gap-2"
                   >
                     <input
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
                       disabled={isUpdating}
-                      className="bg-white/5 border border-neon-green/30 rounded px-2 py-1 text-sm font-mono focus:outline-none w-full text-neon-green"
+                      className="bg-black/40 border border-neon-green/50 rounded-lg px-3 py-2 text-base font-mono text-neon-green w-full focus:outline-none shadow-[0_0_10px_rgba(34,197,94,0.1)]"
                       autoFocus
-                      onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
                     />
-                    {isUpdating ? (
-                      <Loader2 size={16} className="animate-spin text-neon-purple" />
-                    ) : (
-                      <>
-                        <button onClick={handleSaveName} className="text-neon-green p-1 hover:bg-white/5 rounded transition-colors">
-                          <Check size={16} />
-                        </button>
-                        <button onClick={() => setIsEditing(false)} className="text-red-400 p-1 hover:bg-white/5 rounded transition-colors">
-                          <X size={16} />
-                        </button>
-                      </>
-                    )}
+                    <div className="flex gap-1">
+                      <button onClick={handleSaveName} className="text-neon-green p-2 hover:bg-white/5 rounded-lg">
+                        {isUpdating ? <Loader2 size={20} className="animate-spin" /> : <Check size={20} />}
+                      </button>
+                    </div>
                   </motion.div>
                 ) : (
-                  <motion.div 
-                    key="display"
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    className="flex items-center gap-2"
-                  >
-                    <p className="text-sm font-bold font-mono text-foreground truncate">
+                  <div className="flex items-center gap-2">
+                    <p className="text-lg font-black font-mono text-white truncate leading-none">
                       {auth.display_name}
                     </p>
-                    <button 
-                      onClick={() => setIsEditing(true)}
-                      className="p-1 hover:bg-white/5 rounded transition-colors"
-                    >
-                      <Edit3 size={12} className="text-muted-foreground hover:text-neon-purple" />
+                    <button onClick={() => setIsEditing(true)} className="p-1 hover:bg-white/5 rounded">
+                      <Edit3 size={14} className="text-muted-foreground" />
                     </button>
-                  </motion.div>
+                  </div>
                 )}
               </AnimatePresence>
-              <p className="text-[10px] text-neon-green font-mono uppercase tracking-widest mt-0.5">
+              <p className="text-[11px] text-neon-green font-mono uppercase mt-2 tracking-[0.2em] font-bold">
                 Level {fitnessData.currentLevel} Warrior
-              </p>
-              <p className="text-[9px] text-muted-foreground font-mono opacity-50 truncate">
-                {auth.user?.email}
               </p>
             </div>
             <button 
               onClick={logoutUser} 
-              className="p-2 rounded-xl glass-card border border-white/5 text-muted-foreground hover:text-red-400 transition-colors"
+              className="p-3 bg-white/5 rounded-xl text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all border border-white/5"
             >
-              <LogOut size={16} />
+              <LogOut size={20} />
             </button>
           </div>
-        </motion.div>
+        </div>
       )}
 
-      {/* --- STATS GRID --- */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="p-4 rounded-2xl glass-card border border-white/5">
-          <p className="text-[9px] text-muted-foreground font-mono uppercase tracking-widest mb-1">Total Workouts</p>
-          <p className="text-2xl font-black font-mono italic">{totalWorkouts}</p>
+      {/* STATYSTYKI - POWIĘKSZONE GRIDY */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="p-5 rounded-2xl glass-card border border-white/10 bg-white/5 shadow-lg">
+          <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-[0.15em] mb-2">Treningi</p>
+          <div className="flex items-baseline gap-1">
+            <p className="text-3xl font-black font-mono italic text-white">{totalWorkouts}</p>
+            <span className="text-[10px] text-muted-foreground font-mono uppercase">Sesji</span>
+          </div>
         </div>
-        <div className="p-4 rounded-2xl glass-card border border-white/5">
-          <p className="text-[9px] text-muted-foreground font-mono uppercase tracking-widest mb-1">Water Today</p>
-          <p className="text-2xl font-black font-mono italic text-neon-green">{waterData.amount}ml</p>
+        <div className="p-5 rounded-2xl glass-card border border-white/10 bg-white/5 shadow-lg">
+          <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-[0.15em] mb-2">Loot Boxes</p>
+          <div className="flex items-baseline gap-1">
+            <p className="text-3xl font-black font-mono italic text-neon-purple">{totalLootBoxes}</p>
+            <span className="text-[10px] text-neon-purple/60 font-mono uppercase">Szt.</span>
+          </div>
         </div>
       </div>
 
-      {/* --- HOW IT WORKS --- */}
-      <motion.div
-        className="rounded-2xl glass-card p-5 mb-4 border border-white/5"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <Info className="w-4 h-4 text-neon-green" />
-          <h3 className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">How Protocol Works</h3>
+      {/* INSTRUKCJA - WIĘKSZA INTERLINIA I PADDING */}
+      <div className="rounded-2xl glass-card p-6 mb-6 border border-white/10 bg-white/5">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-1.5 h-4 bg-neon-green rounded-full shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+          <h3 className="text-xs font-mono text-white uppercase tracking-[0.2em] font-bold">Zasady Systemu</h3>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-4">
           {[
-            { label: "Level Up", desc: "30 min workout = +1 Level", icon: <Zap size={14} className="text-neon-purple" /> },
-            { label: "Rewards", desc: "Unlock loot as you level up", icon: <Trophy size={14} className="text-yellow-500" /> },
-            { label: "Water Goal", desc: "Target: 2000ml daily", icon: <Droplets size={14} className="text-blue-400" /> },
-            { label: "The Vault", desc: "Locked until daily workout", icon: <Lock size={14} className="text-red-400" /> },
+            { label: "Level Up", desc: "30 min wysiłku = 1 Punkt Poziomu", icon: <Zap size={16} className="text-neon-purple" /> },
+            { label: "Nagrody", desc: "Nowe itemy w panelu Nagród", icon: <Trophy size={16} className="text-yellow-500" /> },
+            { label: "Woda", desc: "Optymalnie 2000ml na dobę", icon: <Droplets size={16} className="text-blue-400" /> },
+            { label: "Skarbiec", desc: "Zabezpieczony kodem PIN", icon: <Lock size={16} className="text-red-400" /> },
           ].map((item) => (
-            <div key={item.label} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-              <div className="shrink-0">{item.icon}</div>
+            <div key={item.label} className="flex items-start gap-4 p-4 rounded-xl bg-black/20 border border-white/5">
+              <div className="mt-0.5">{item.icon}</div>
               <div>
-                <p className="text-xs font-bold font-mono uppercase tracking-tight">{item.label}</p>
-                <p className="text-[10px] text-muted-foreground font-mono">{item.desc}</p>
+                <p className="text-xs font-black font-mono uppercase text-white tracking-wide">{item.label}</p>
+                <p className="text-[11px] text-muted-foreground font-mono mt-1 leading-relaxed">{item.desc}</p>
               </div>
             </div>
           ))}
         </div>
-      </motion.div>
+      </div>
 
-      {/* --- RECENT LOGS --- */}
-      {workoutLog.length > 0 && (
-        <div className="rounded-2xl glass-card p-5 mb-4 border border-white/5">
-          <h3 className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest mb-4 italic">Recent Logs</h3>
-          <div className="space-y-2">
-            {workoutLog.slice(-3).reverse().map((log, i) => (
-              <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
-                <span className="text-xs font-mono opacity-60">{log.date}</span>
-                <span className="text-xs font-mono text-neon-green font-bold">+{log.minutes} MIN</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* --- DANGER ZONE --- */}
-      <div className="rounded-2xl glass-card p-5 border border-red-500/20 bg-red-500/5">
-        <h3 className="text-[10px] font-mono text-red-500 uppercase tracking-widest mb-4">System Reset</h3>
+      {/* RESET - PEŁNA SZEROKOŚĆ I WIĘKSZE PRZYCISKI */}
+      <div className="rounded-2xl glass-card p-6 border border-red-500/20 bg-red-500/5 shadow-[0_0_20px_rgba(239,68,68,0.05)]">
+        <h3 className="text-[10px] font-mono text-red-500 uppercase tracking-[0.2em] mb-5 font-bold">Protokół Bezpieczeństwa</h3>
         {showConfirm ? (
-          <div className="flex gap-2">
+          <div className="space-y-3">
             <button 
               onClick={handleReset} 
-              className="flex-1 py-3 rounded-xl bg-red-600 text-[10px] font-bold font-mono text-white hover:bg-red-700 transition-colors"
+              className="w-full py-4 rounded-xl bg-red-600 text-xs font-black font-mono text-white uppercase tracking-widest shadow-lg shadow-red-900/40 active:scale-95 transition-transform"
             >
-              CONFIRM WIPE
+              POTWIERDZAM RESET DANYCH
             </button>
             <button 
               onClick={() => setShowConfirm(false)} 
-              className="flex-1 py-3 rounded-xl glass-card border border-white/10 text-[10px] font-mono hover:bg-white/5 transition-colors"
+              className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-xs font-mono text-white uppercase tracking-widest"
             >
-              CANCEL
+              ANULUJ
             </button>
           </div>
         ) : (
           <button 
             onClick={() => setShowConfirm(true)} 
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-red-500/30 text-red-500 font-mono text-[10px] font-bold hover:bg-red-500/10 transition-colors"
+            className="w-full flex items-center justify-center gap-3 py-4 rounded-xl border border-red-500/30 text-red-500 font-mono text-xs font-black uppercase tracking-widest hover:bg-red-500/10 transition-all shadow-inner"
           >
-            <RotateCcw size={14} /> CLEAR LOCAL PROTOCOL
+            <RotateCcw size={16} /> RESETUJ WSZYSTKIE DANE
           </button>
         )}
       </div>

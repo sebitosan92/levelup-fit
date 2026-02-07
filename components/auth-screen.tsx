@@ -19,17 +19,15 @@ export function AuthScreen() {
     setError("")
 
     try {
-      // Wywołujemy odpowiednią funkcję
       const result = mode === "login"
         ? await loginUser(username, password)
         : await signupUser(username, password)
 
-      // Sprawdzamy wynik - używamy rzutowania 'as any' jeśli Twój store nie ma zdefiniowanych typów powrotnych
       if (result && !(result as any).success) {
-        setError((result as any).error || "Something went wrong")
+        setError((result as any).error || "Błąd autoryzacji systemu")
       }
     } catch (err) {
-      setError("Connection protocol failed")
+      setError("Protokół połączenia przerwany")
     } finally {
       setLoading(false)
     }
@@ -64,36 +62,36 @@ export function AuthScreen() {
             <span className="text-neon-green">UP</span>
             <span className="text-foreground"> FIT</span>
           </h1>
-          <p className="text-sm text-muted-foreground mt-1 font-mono uppercase tracking-widest text-[10px]">
-            {mode === "login" ? "Identity required" : "Initialize profile"}
+          <p className="text-sm text-muted-foreground mt-1 font-mono uppercase tracking-[0.3em] text-[10px] italic">
+            {mode === "login" ? "Wymagana tożsamość" : "Inicjalizacja profilu"}
           </p>
         </motion.div>
 
-        {/* Tab switcher */}
+        {/* Przełącznik trybu */}
         <div className="flex gap-1 p-1 rounded-xl bg-white/5 border border-white/10 mb-6">
           {(["login", "signup"] as const).map((m) => (
             <button
               key={m}
               type="button"
               onClick={() => { setMode(m); setError("") }}
-              className={`flex-1 py-2.5 rounded-lg text-xs font-mono font-medium transition-all ${
+              className={`flex-1 py-2.5 rounded-lg text-xs font-mono font-black transition-all ${
                 mode === m
                   ? "bg-neon-purple text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {m === "login" ? "LOG IN" : "SIGN UP"}
+              {m === "login" ? "LOGOWANIE" : "REJESTRACJA"}
             </button>
           ))}
         </div>
 
-        {/* Form */}
+        {/* Formularz */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
             <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Username"
+              placeholder="Nazwa użytkownika"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-foreground placeholder:text-muted-foreground font-mono text-sm focus:outline-none focus:border-neon-purple/50 transition-all"
@@ -104,7 +102,7 @@ export function AuthScreen() {
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="password"
-              placeholder="Password"
+              placeholder="Hasło dostępowe"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-foreground placeholder:text-muted-foreground font-mono text-sm focus:outline-none focus:border-neon-purple/50 transition-all"
@@ -118,7 +116,7 @@ export function AuthScreen() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="text-xs text-red-400 font-mono text-center bg-red-500/10 py-2 rounded-lg border border-red-500/20"
+                className="text-xs text-red-400 font-mono text-center bg-red-500/10 py-2 rounded-lg border border-red-500/20 uppercase tracking-tighter"
               >
                 {error}
               </motion.p>
@@ -128,14 +126,14 @@ export function AuthScreen() {
           <motion.button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-neon-purple text-white font-mono text-sm font-bold shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-neon-purple text-white font-mono text-sm font-black shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all disabled:opacity-50 uppercase tracking-widest"
             whileTap={{ scale: 0.98 }}
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
               <>
-                {mode === "login" ? "ACCESS ARENA" : "JOIN REBELLION"}
+                {mode === "login" ? "WEJDŹ NA ARENĘ" : "DOŁĄCZ DO RUCHU"}
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -143,13 +141,13 @@ export function AuthScreen() {
         </form>
 
         <p className="text-center text-[10px] text-muted-foreground font-mono mt-8 uppercase tracking-tighter">
-          {mode === "login" ? "No credentials found? " : "Already registered? "}
+          {mode === "login" ? "Brak poświadczeń? " : "Masz już ID? "}
           <button
             type="button"
             onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError("") }}
-            className="text-neon-purple hover:text-neon-green transition-colors underline"
+            className="text-neon-purple hover:text-neon-green transition-colors underline decoration-neon-purple/30 underline-offset-4"
           >
-            {mode === "login" ? "Create ID" : "Verify ID"}
+            {mode === "login" ? "Utwórz Profil" : "Weryfikuj ID"}
           </button>
         </p>
       </motion.div>

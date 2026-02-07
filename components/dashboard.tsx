@@ -3,111 +3,123 @@
 import React, { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
-  Timer, Zap, TrendingUp, Edit2, BarChart3, 
-  Target, Droplets, Dumbbell, Trophy, Gift,
-  Database, Users, X, Send, MessageSquare, Cpu, Search, Plus, Activity, UserPlus, UserMinus, User, CheckCircle2
+  Timer, Zap, TrendingUp, BarChart3, 
+  Trophy, Gift, Database, Users, X, Activity, 
+  CheckCircle2, AlertCircle, Clock,
+  Calculator
 } from "lucide-react"
 
-// Importy komponentów lokalnych - upewnij się, że te pliki istnieją!
+// Importy komponentów lokalnych
 import { LevelRing } from "./level-ring"
 import { WorkoutTimer } from "./workout-timer"
 import { WaterTracker } from "./water-tracker"
 import { HoloCard } from "./holo-card"
 import { WeatherEnvironment } from "./weather-env"
 import { StatsRadar } from "./stats-radar"
+import { SocialView } from "./social-view"
+import { ShareProgress } from "./share-progress"
+import { BioCalculator } from "./bio-calculator"
+import { MacroTracker } from "./macro-tracker" // IMPORT NOWEGO KOMPONENTU
 
 import { useWeather } from "@/lib/weather-store"
 import { 
   useFitnessData, 
-  useStatusMessage, 
   useAuth,
   useWaterData,
   getTodayWorkoutMinutes,
   claimQuestReward,
-  useMessages,
-  useFriends,
-  useAllUsers,
-  addFriend,
-  removeFriend,
-  sendChatMessage,
-  useLootBoxes
+  useLootBoxes,
+  getTimeUntilMidnight
 } from "@/lib/fitness-store"
-
-const getAvatarColor = (name: string) => {
-  const colors = [
-    'from-cyan-500/40 to-blue-600/40',
-    'from-purple-500/40 to-pink-600/40',
-    'from-emerald-500/40 to-teal-600/40',
-    'from-orange-500/40 to-red-600/40',
-    'from-indigo-500/40 to-violet-600/40'
-  ]
-  const index = name ? name.length % colors.length : 0
-  return colors[index]
-}
 
 export function Dashboard() {
   const { profile, display_name } = useAuth()
   const fitness = useFitnessData()
-  const water = useWaterData() || 0
+  const water = useWaterData()
   const workoutMins = typeof getTodayWorkoutMinutes === 'function' ? getTodayWorkoutMinutes() : 0
-  const messages = useMessages() || []
-  const friends = useFriends() || []
-  const allUsers = useAllUsers() || []
   const lootBoxes = useLootBoxes() || 0
   const { vibe, temp } = useWeather()
   
   const [showVault, setShowVault] = useState(false)
   const [showSocial, setShowSocial] = useState(false)
-  const [chatMsg, setChatMsg] = useState("")
-  const [prevLevel, setPrevLevel] = useState(fitness?.currentLevel || 1)
-
-  // STATYSTYKI - Zdefiniowane przed użyciem w JSX
-  const totalMinutes = fitness?.totalMinutes || 0
-  const currentLevel = fitness?.currentLevel || 1
-  const minsToNextLevel = 30 - (totalMinutes % 30)
+  
+  const [systemStatus, setSystemStatus] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
+  const [timeLeft, setTimeLeft] = useState(getTimeUntilMidnight())
 
   useEffect(() => {
-    if (fitness && fitness.currentLevel > prevLevel) {
-      setPrevLevel(fitness.currentLevel)
+    const timer = setInterval(() => {
+      setTimeLeft(getTimeUntilMidnight())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const handleClaimAction = async (xp: number, stat: any, val: number) => {
+    setSystemStatus(null);
+    const result = await claimQuestReward(xp, stat, val)
+    
+    if (result?.isAlreadyClaimed) {
+      setSystemStatus({ 
+        text: `LIMIT OSIĄGNIĘTY. RESET ZA: ${timeLeft.hours}h ${timeLeft.minutes}m ${timeLeft.seconds}s`, 
+        type: 'error' 
+      })
+    } else if (result?.success) {
+      setSystemStatus({ text: `SYNCHRONIZACJA OK: +${xp} XP DODANE`, type: 'success' })
+    } else {
+      setSystemStatus({ text: "BŁĄD POŁĄCZENIA Z SERWEREM", type: 'error' })
     }
-  }, [fitness?.currentLevel, prevLevel])
+    
+    setTimeout(() => setSystemStatus(null), 5000)
+  }
 
   if (!profile && !display_name) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Activity className="w-12 h-12 text-cyan-500 animate-pulse" />
-        <p className="text-cyan-500/50 font-mono text-[10px] uppercase tracking-widest">Establishing Neural Link...</p>
+        <p className="text-cyan-500/50 font-mono text-[10px] uppercase tracking-widest">Nawiązywanie połączenia neuronowego...</p>
       </div>
     )
   }
 
-  const weatherColor = vibe === 'rainy' ? 'text-cyan-400' : 
-                        vibe === 'sunny' ? 'text-orange-400' : 'text-emerald-400'
-
-  const handleSendMessage = async () => {
-    if (!chatMsg.trim()) return
-    try {
-      if (typeof sendChatMessage === 'function') {
-        await sendChatMessage(chatMsg, display_name || "Unknown Operator")
-        setChatMsg("")
-      }
-    } catch (err) {
-      console.error("Signal failed:", err)
-    }
-  }
+  const weatherColor = vibe === 'rainy' ? 'text-cyan-400' : vibe === 'sunny' ? 'text-orange-400' : 'text-emerald-400'
 
   return (
     <div className="relative space-y-6 pb-24 px-4 sm:px-0">
       <WeatherEnvironment />
       
+      {/* NOTYFIKACJE SYSTEMOWE */}
+      <div className="fixed top-24 left-4 right-4 z-[100] pointer-events-none">
+        <AnimatePresence mode="wait">
+          {systemStatus && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: -20 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.9, y: -20 }}
+              className={`max-w-md mx-auto p-4 rounded-2xl border-2 shadow-2xl backdrop-blur-xl flex items-center gap-4 pointer-events-auto ${
+                systemStatus.type === 'error' ? 'bg-red-950/90 border-red-500 text-red-200' : 'bg-green-950/90 border-green-500 text-green-200'
+              }`}
+            >
+              {systemStatus.type === 'error' ? <AlertCircle size={20} className="text-red-400" /> : <CheckCircle2 size={20} className="text-green-400" />}
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black uppercase tracking-widest opacity-50">System</span>
+                <span className="text-xs font-black uppercase tracking-tight">{systemStatus.text}</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       <div className="relative z-10 space-y-6">
         {/* HEADER */}
         <div className="flex justify-between items-start">
           <div className="space-y-1">
             <p className={`text-[10px] font-mono uppercase tracking-widest ${weatherColor}`}>
-              {vibe || 'standard'} active {temp !== null && `[${temp}°C]`}
+              {vibe === 'rainy' ? 'DESZCZ' : vibe === 'sunny' ? 'SŁOŃCE' : 'STANDARD'} AKTYWNY {temp !== null && `[${temp}°C]`}
             </p>
-            <h1 className="text-xl font-bold font-mono italic text-white uppercase tracking-tighter">Nexus Dashboard</h1>
+            <h1 className="text-xl font-bold font-mono italic text-white uppercase tracking-tighter">LeveUP FIT by Seba</h1>
+            
+            <div className="pt-2">
+              <ShareProgress />
+            </div>
           </div>
 
           <div className="flex gap-2">
@@ -116,53 +128,40 @@ export function Dashboard() {
             </button>
             <button onClick={() => setShowVault(true)} className="relative p-3 glass-card rounded-xl border border-purple-500/50 text-purple-400 bg-purple-500/10 transition-all hover:bg-purple-500/20 active:scale-90">
               <Database size={20} />
-              {lootBoxes > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-[8px] text-white rounded-full flex items-center justify-center font-bold animate-pulse">
-                  {lootBoxes}
-                </span>
-              )}
+              {lootBoxes > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-[8px] text-white rounded-full flex items-center justify-center font-bold animate-pulse">{lootBoxes}</span>}
             </button>
           </div>
         </div>
 
-        {/* DAILY BONUS */}
+        {/* BONUS DZIENNY */}
         <button 
-          onClick={() => {
-            if (typeof claimQuestReward === 'function') {
-              claimQuestReward(50, 'foc', 10)
-            }
-          }} 
+          onClick={() => handleClaimAction(50, 'foc', 10)} 
           className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between shadow-lg hover:bg-white/10 transition-all group active:scale-[0.98]"
         >
           <div className="flex items-center gap-3">
             <Gift size={18} className="text-yellow-500 group-hover:rotate-12 transition-transform" />
-            <span className="text-xs font-bold text-white uppercase tracking-tight">Neural Link Daily</span>
+            <span className="text-xs font-bold text-white uppercase tracking-tight">Połączenie Neuronowe</span>
           </div>
-          <span className="text-[10px] font-black text-yellow-500 uppercase">Claim Reward</span>
+          <span className="text-[10px] font-black text-yellow-500 uppercase">Odbierz Bonus</span>
         </button>
 
-        {/* MAIN STATS RING */}
         <div className="flex justify-center py-4">
-          <LevelRing level={currentLevel} totalMinutes={totalMinutes} />
+          <LevelRing level={fitness?.currentLevel || 1} totalMinutes={fitness?.totalMinutes || 0} />
         </div>
         
-        {/* QUICK STATS */}
         <div className="grid grid-cols-2 gap-4">
           <HoloCard>
             <div className="p-4 glass-card rounded-2xl">
               <Timer size={14} className="text-purple-400 mb-2"/>
-              <p className="text-[10px] text-white/40 uppercase font-bold mb-1">Total Time</p>
-              <p className="text-2xl font-black text-white">{totalMinutes}<span className="text-xs ml-1 text-purple-400">m</span></p>
+              <p className="text-[10px] text-white/40 uppercase font-bold mb-1">Czas Całkowity</p>
+              <p className="text-2xl font-black text-white">{fitness?.totalMinutes || 0}<span className="text-xs ml-1 text-purple-400">m</span></p>
             </div>
           </HoloCard>
           <HoloCard>
             <div className="p-4 glass-card rounded-2xl">
               <TrendingUp size={14} className="text-cyan-400 mb-2"/>
-              <p className="text-[10px] text-white/40 uppercase font-bold mb-1">Next Level</p>
-              <p className="text-2xl font-black text-white">
-                {minsToNextLevel}
-                <span className="text-xs ml-1 text-cyan-400">m</span>
-              </p>
+              <p className="text-[10px] text-white/40 uppercase font-bold mb-1">Następny Poziom</p>
+              <p className="text-2xl font-black text-white">{30 - ((fitness?.totalMinutes || 0) % 30)}<span className="text-xs ml-1 text-cyan-400">m</span></p>
             </div>
           </HoloCard>
         </div>
@@ -170,11 +169,23 @@ export function Dashboard() {
         <WorkoutTimer />
         <WaterTracker />
 
-        {/* BIOMETRICS */}
+        {/* BIO-OPTYMALIZACJA (KALKULATOR + MAKRO) */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <Calculator size={14} className="text-purple-500" />
+            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Bio-Optymalizacja</h2>
+          </div>
+          <div className="grid gap-4">
+            <BioCalculator />
+            <MacroTracker />
+          </div>
+        </div>
+
+        {/* ANALIZA BIOMETRYCZNA */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 px-1">
             <BarChart3 size={14} className="text-cyan-400" />
-            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Biometric Analysis</h2>
+            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Analiza Biometryczna</h2>
           </div>
           <HoloCard>
             <div className="p-6 glass-card rounded-[2.5rem] flex justify-center items-center min-h-[300px] overflow-hidden">
@@ -183,32 +194,42 @@ export function Dashboard() {
           </HoloCard>
         </div>
 
-        {/* QUESTS */}
+        {/* MISJE */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <Trophy size={14} className="text-yellow-500" />
-            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Active Missions</h2>
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <Trophy size={14} className="text-yellow-500" />
+              <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Aktywne Misje</h2>
+            </div>
+            <div className="text-[9px] font-mono text-cyan-500/50 flex items-center gap-1 bg-cyan-500/5 px-2 py-1 rounded">
+              <Clock size={10} /> {timeLeft.hours}:{timeLeft.minutes}:{timeLeft.seconds}
+            </div>
           </div>
           <div className="space-y-3">
             {[
-              { id: 'q1', title: 'Hydration Protocol', desc: 'Drink 2000ml of water', progress: water, total: 2000, reward: '50 XP' },
-              { id: 'q2', title: 'Stamina Build', desc: 'Work out for 30 min', progress: workoutMins, total: 30, reward: '100 XP' }
+              { id: 'q1', title: 'Protokół Nawodnienia', desc: 'Wypij 2000ml wody', progress: water?.amount || 0, total: 2000, reward: 50, stat: 'def' },
+              { id: 'q2', title: 'Budowa Wytrzymałości', desc: 'Trenuj przez 30 min', progress: workoutMins, total: 30, reward: 100, stat: 'str' }
             ].map(quest => {
               const percentage = Math.min(100, Math.round(((Number(quest.progress) || 0) / (Number(quest.total) || 1)) * 100))
+              const isDone = percentage >= 100
               return (
-                <div key={quest.id} className="p-4 glass-card rounded-2xl border border-white/5 flex items-center justify-between hover:bg-white/5 transition-colors">
-                  <div className="space-y-1">
-                    <p className="text-xs font-bold text-white">{quest.title}</p>
-                    <p className="text-[10px] text-white/40">{quest.desc}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-black text-cyan-400">{quest.reward}</p>
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-1 bg-white/5 rounded-full overflow-hidden">
-                        <div className="h-full bg-cyan-500" style={{ width: `${percentage}%` }} />
-                      </div>
-                      <p className="text-[9px] text-white/20 font-mono">{percentage}%</p>
+                <div key={quest.id} className={`p-4 glass-card rounded-2xl border transition-all duration-500 ${isDone ? 'border-green-500/40 bg-green-500/10' : 'border-white/5 bg-white/5'}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="space-y-1">
+                      <p className="text-xs font-black text-white italic uppercase tracking-tight">{quest.title}</p>
+                      <p className="text-[9px] text-white/30 font-mono uppercase">{quest.progress} / {quest.total} ML/MIN</p>
                     </div>
+                    {isDone ? (
+                      <button onClick={() => handleClaimAction(quest.reward, quest.stat as any, 5)} className="bg-white text-black text-[9px] font-black px-4 py-2 rounded-lg uppercase shadow-lg">Odbierz</button>
+                    ) : (
+                      <div className="px-3 py-1 bg-black/40 rounded flex items-center gap-2">
+                        <Zap size={10} className="text-yellow-500" />
+                        <span className="text-[9px] font-black text-white/60">{quest.reward} XP</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${percentage}%` }} className={`h-full ${isDone ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-cyan-500/40'}`} />
                   </div>
                 </div>
               )
@@ -217,132 +238,32 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* SOCIAL POPUP */}
+      {/* MODALE */}
       <AnimatePresence>
         {showSocial && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowSocial(false)} className="fixed inset-0 z-[140] bg-black/80 backdrop-blur-md" />
-            <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pointer-events-none">
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9, y: 20 }} 
-                animate={{ opacity: 1, scale: 1, y: 0 }} 
-                exit={{ opacity: 0, scale: 0.9, y: 20 }} 
-                className="w-full max-w-[500px] h-[85vh] bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] shadow-[0_0_60px_rgba(0,0,0,1)] flex flex-col overflow-hidden pointer-events-auto"
-              >
-                <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/5 shrink-0">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-cyan-500/10 rounded-lg"><Users className="text-cyan-400" size={20} /></div>
-                    <h2 className="text-base font-black uppercase italic text-white tracking-widest">Social Link</h2>
-                  </div>
-                  <button onClick={() => setShowSocial(false)} className="p-2 hover:bg-white/10 rounded-full text-white/50 transition-colors"><X size={24} /></button>
-                </div>
-
-                <div className="flex-1 flex flex-col min-h-0 p-5 space-y-6 overflow-y-auto scrollbar-hide">
-                  <div className="shrink-0 space-y-3">
-                    <p className="text-[10px] text-cyan-400 uppercase font-bold tracking-[0.2em]">Active Nodes ({friends.length})</p>
-                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                      {friends.length === 0 && <p className="text-[10px] text-white/20 italic">No nodes connected...</p>}
-                      {friends.map(f => (
-                        <div key={f.id} className="flex-shrink-0 text-center relative group">
-                          <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${getAvatarColor(f.display_name)} border border-cyan-500/30 flex items-center justify-center font-black text-white text-xs shadow-lg`}>
-                            {f.display_name ? f.display_name[0].toUpperCase() : <User size={14}/>}
-                          </div>
-                          <button 
-                            onClick={() => { if(typeof removeFriend === 'function') removeFriend(f.id) }} 
-                            className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1 border border-black shadow-lg hover:scale-110 transition-transform"
-                          >
-                            <UserMinus size={10} />
-                          </button>
-                          <p className="text-[8px] mt-1.5 text-white/60 font-mono">{f.display_name?.slice(0, 8)}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="shrink-0 space-y-3">
-                    <p className="text-[10px] text-purple-400 uppercase font-bold tracking-[0.2em]">Global Directory</p>
-                    <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
-                      {allUsers.filter(u => u.id !== profile?.id && !friends.find(f => f.id === u.id)).map(user => (
-                        <div key={user.id} className="flex-shrink-0 flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
-                          <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getAvatarColor(user.display_name || "U")} flex items-center justify-center text-[10px] font-bold text-white`}>
-                            {(user.display_name || "U")[0].toUpperCase()}
-                          </div>
-                          <div className="flex flex-col pr-1">
-                            <span className="text-[10px] text-white font-mono leading-none mb-1">{user.display_name || "Unknown"}</span>
-                            <span className="text-[8px] text-cyan-500/50 font-black">LVL {user.level || 1}</span>
-                          </div>
-                          <button 
-                            onClick={() => { if(typeof addFriend === 'function') addFriend(user.id) }} 
-                            className="p-1.5 bg-cyan-500/10 text-cyan-400 rounded-lg hover:bg-cyan-500 hover:text-black transition-all"
-                          >
-                            <UserPlus size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex-1 flex flex-col min-h-0 space-y-3 overflow-hidden">
-                    <p className="text-[10px] text-white/30 uppercase font-bold tracking-[0.2em]">Encrypted Comms</p>
-                    <div className="flex-1 bg-black/40 rounded-[2rem] border border-white/5 p-4 overflow-y-auto space-y-4 scrollbar-hide">
-                      {messages.length === 0 && <p className="text-center text-[10px] text-white/10 mt-10 uppercase tracking-[0.3em]">No signals detected</p>}
-                      {messages.map(m => (
-                        <div key={m.id} className={`flex items-start gap-2 ${m.user_id === profile?.id ? 'flex-row-reverse' : 'flex-row'}`}>
-                          <div className={`w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[8px] font-bold text-white shadow-lg bg-gradient-to-br ${getAvatarColor(m.display_name || "A")}`}>
-                            {(m.display_name || "A")[0].toUpperCase()}
-                          </div>
-                          <div className={`flex flex-col ${m.user_id === profile?.id ? 'items-end' : 'items-start'}`}>
-                            <p className="text-[7px] text-cyan-400/40 uppercase mb-1 font-mono">{m.display_name}</p>
-                            <div className={`p-3 rounded-2xl text-[13px] max-w-[240px] leading-relaxed ${m.user_id === profile?.id ? 'bg-cyan-500/20 text-cyan-50 border border-cyan-500/20' : 'bg-white/5 text-white/80 border border-white/5'}`}>
-                              {m.text}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-6 bg-white/5 border-t border-white/5 shrink-0">
-                  <div className="flex gap-3">
-                    <input 
-                      value={chatMsg} 
-                      onChange={(e) => setChatMsg(e.target.value)} 
-                      onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} 
-                      placeholder="Type signal..." 
-                      className="flex-1 bg-black/60 border border-white/10 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-cyan-500/40 transition-all placeholder:text-white/20" 
-                    />
-                    <button onClick={handleSendMessage} className="p-4 bg-cyan-500 text-black rounded-2xl shadow-[0_0_20px_#06b6d4] active:scale-95 transition-transform group">
-                      <Send size={22} className="group-hover:translate-x-1 transition-transform" />
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </>
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowSocial(false)} className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative w-full max-w-md z-10">
+              <div className="absolute -top-12 right-0">
+                <button onClick={() => setShowSocial(false)} className="p-2 text-white/50 hover:text-white transition-colors"><X size={24} /></button>
+              </div>
+              <SocialView />
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {showVault && (
-          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed inset-0 z-[200] bg-[#050505] p-6 overflow-y-auto">
-            <div className="flex items-center justify-between mb-8 text-white">
-              <div className="flex items-center gap-3">
-                <Database className="text-purple-400" />
-                <h2 className="text-2xl font-black uppercase tracking-tighter italic">Neural Vault</h2>
-              </div>
-              <button onClick={() => setShowVault(false)} className="p-3 bg-white/5 rounded-full hover:bg-white/10 transition-colors"><X size={24} /></button>
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowVault(false)} className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+            <div className="relative z-10 bg-black border border-white/20 p-8 rounded-[2rem] text-center shadow-[0_0_50px_rgba(168,85,247,0.2)]">
+              <Database className="mx-auto mb-4 text-purple-500" size={48} />
+              <h2 className="text-xl font-black text-white uppercase italic">Skarbiec</h2>
+              <p className="text-white/50 text-xs mt-2 uppercase tracking-widest leading-relaxed">System nagród w trakcie <br/>synchronizacji neuronowej...</p>
+              <button onClick={() => setShowVault(false)} className="mt-6 px-8 py-2 bg-purple-500 text-white font-black rounded-xl uppercase text-[10px] active:scale-95 transition-transform">Zamknij</button>
             </div>
-            
-            <div className="p-8 rounded-[3rem] border border-purple-500/20 bg-purple-500/5 text-white flex flex-col items-center justify-center min-h-[400px]">
-              <div className="relative mb-6">
-                <Cpu className="text-purple-500 animate-pulse" size={64}/>
-                <div className="absolute inset-0 bg-purple-500/20 blur-2xl rounded-full" />
-              </div>
-              <p className="text-purple-400 font-mono text-sm uppercase tracking-widest text-center mb-2">Neural Scan Complete</p>
-              <p className="text-white/30 text-xs text-center">No active augments or loot boxes detected in this sector.</p>
-            </div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

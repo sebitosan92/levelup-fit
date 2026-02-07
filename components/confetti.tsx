@@ -9,12 +9,12 @@ interface ConfettiProps {
 }
 
 const COLORS = [
-  "hsl(270 80% 65%)",
-  "hsl(270 80% 75%)",
-  "hsl(142 72% 50%)",
-  "hsl(142 72% 65%)",
-  "hsl(0 0% 95%)",
-  "hsl(270 60% 80%)",
+  "hsl(270 80% 65%)", // Fiolet
+  "hsl(270 80% 75%)", 
+  "hsl(142 72% 50%)", // Neonowa zieleń
+  "hsl(142 72% 65%)", 
+  "hsl(0 0% 95%)",    // Biały
+  "hsl(270 60% 80%)", 
 ]
 
 interface Particle {
@@ -81,7 +81,8 @@ export function Confetti({ show, onComplete }: ConfettiProps) {
               }}
             />
           ))}
-          {/* Level Up overlay text */}
+
+          {/* Nakładka tekstu Level Up */}
           <motion.div
             className="absolute inset-0 flex items-center justify-center"
             initial={{ scale: 0, opacity: 0 }}
@@ -89,12 +90,12 @@ export function Confetti({ show, onComplete }: ConfettiProps) {
             exit={{ scale: 1.5, opacity: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="text-center glass-card rounded-2xl px-8 py-5">
-              <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-1">
-                Achievement
+            <div className="text-center glass-card rounded-[2.5rem] px-10 py-6 border border-white/10 shadow-[0_0_50px_rgba(168,85,247,0.2)] bg-black/60 backdrop-blur-xl">
+              <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.4em] mb-2">
+                Osiągnięcie odblokowane
               </p>
-              <p className="text-3xl font-bold text-neon-green neon-green-text font-mono">
-                LEVEL UP!
+              <p className="text-4xl font-black text-neon-green italic tracking-tighter shadow-green-500/50 drop-shadow-[0_0_10px_rgba(34,197,94,0.5)]">
+                AWANS POZIOMU!
               </p>
             </div>
           </motion.div>

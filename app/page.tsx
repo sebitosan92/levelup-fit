@@ -10,6 +10,7 @@ import { SettingsView } from "@/components/settings-view"
 import { AuthScreen } from "@/components/auth-screen"
 import { LeaderboardView } from "@/components/leaderboard-view" 
 import { SocialView } from "@/components/social-view" 
+import { HabitStack } from "@/components/habit-stack" // IMPORT KOMPONENTU
 import { useAuth } from "@/lib/fitness-store"
 
 export default function Home() {
@@ -44,8 +45,7 @@ export default function Home() {
       </div>
 
       {/* --- CONTENT LAYER --- */}
-      {/* Dodaliśmy flex i flex-col oraz items-center, aby kontrolować dzieci */}
-      <div className="relative z-10 max-w-md mx-auto pt-4 pb-40 flex flex-col items-center">
+      <div className="relative z-10 max-w-md mx-auto pt-4 pb-40 min-h-screen">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -53,32 +53,63 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            /* KLUCZ: h-auto i w-full zapobiegają rozciąganiu w pionie */
             className="w-full h-auto"
           >
-            {activeTab === 'home' && <Dashboard />}
-            
-            {activeTab === 'rewards' && (
-              <div className="px-4 pt-4"><RewardsView /></div>
+            {/* Zakładka HOME (BAZA) */}
+            {activeTab === 'home' && (
+              <div className="w-full px-4">
+                <Dashboard />
+              </div>
+            )}
+
+            {/* Zakładka DYSCYPLINA (HABITS) - NOWOŚĆ POMIĘDZY BAZĄ A SEJFEM */}
+            {activeTab === 'habits' && (
+              <div className="w-full px-4 pt-4 space-y-6">
+                <div className="px-1">
+                  <h1 className="text-2xl font-black text-white italic uppercase tracking-tighter">
+                    Protokół <span className="text-orange-500 text-glow-orange">Dyscypliny</span>
+                  </h1>
+                  <p className="text-[10px] font-mono text-white/30 uppercase tracking-[0.3em]">
+                    Status: Synchronizacja nawyków...
+                  </p>
+                </div>
+                <HabitStack />
+              </div>
             )}
             
+            {/* Zakładka SEJF (VAULT) */}
             {activeTab === 'vault' && (
-              <div className="px-4 pt-4"><MotivationVault /></div>
+              <div className="w-full px-4 pt-4">
+                <MotivationVault />
+              </div>
             )}
 
+            {/* Zakładka RANKING */}
             {activeTab === 'leaderboard' && (
-              <div className="px-4 pt-4"><LeaderboardView /></div>
+              <div className="w-full px-4 pt-4">
+                <LeaderboardView />
+              </div>
             )}
 
-            {/* --- ZMIANA TUTAJ: SZTYWNA BLOKADA DLA SOCIAL --- */}
+            {/* Zakładka NAGRODY */}
+            {activeTab === 'rewards' && (
+              <div className="w-full px-4 pt-4">
+                <RewardsView />
+              </div>
+            )}
+
+            {/* Zakładka SOCIAL */}
             {activeTab === 'social' && (
-              <div className="w-full px-4 flex justify-center" style={{ height: '250px', overflow: 'hidden' }}>
+              <div className="w-full px-4 pt-4">
                 <SocialView />
               </div>
             )}
             
+            {/* Zakładka USTAWIENIA */}
             {activeTab === 'settings' && (
-              <div className="px-4 pt-4"><SettingsView /></div>
+              <div className="w-full px-4 pt-4">
+                <SettingsView />
+              </div>
             )}
           </motion.div>
         </AnimatePresence>

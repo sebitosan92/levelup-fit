@@ -6,14 +6,14 @@ import { Box, Zap, Shield, Crown, Flame, Loader2, Download, Trophy, Dumbbell, Ta
 import { useLootBoxes, openLootBox } from "@/lib/fitness-store"
 
 const REWARDS = [
-  { title: "TITAN POWER", rarity: "LEGENDARY", icon: <Flame size={28} />, color: "from-orange-500 to-red-600", stats: { str: 99, spd: 0, def: 0, foc: 0 }, desc: "God-like strength" },
-  { title: "NEON SPEED", rarity: "EPIC", icon: <Zap size={28} />, color: "from-cyan-400 to-blue-600", stats: { str: 0, spd: 50, def: 0, foc: 0 }, desc: "Break the sound barrier" },
-  { title: "IRON BODY", rarity: "RARE", icon: <Shield size={28} />, color: "from-slate-400 to-slate-600", stats: { str: 0, spd: 0, def: 30, foc: 0 }, desc: "Solid as a rock" },
-  { title: "ZEN FOCUS", rarity: "COMMON", icon: <Crown size={28} />, color: "from-emerald-400 to-green-600", stats: { str: 0, spd: 0, def: 0, foc: 10 }, desc: "Mind over matter" },
-  { title: "SHADOW STEP", rarity: "EPIC", icon: <Wind size={28} />, color: "from-indigo-500 to-purple-700", stats: { str: 5, spd: 40, def: 5, foc: 0 }, desc: "Invisible movement" },
-  { title: "BULL EYE", rarity: "RARE", icon: <Target size={28} />, color: "from-red-400 to-red-800", stats: { str: 0, spd: 0, def: 0, foc: 35 }, desc: "Precision strikes" },
-  { title: "OVERLOAD", rarity: "LEGENDARY", icon: <Dumbbell size={28} />, color: "from-yellow-400 to-orange-700", stats: { str: 60, spd: -10, def: 40, foc: 0 }, desc: "Pure mass gain" },
-  { title: "VITALITY", rarity: "COMMON", icon: <Heart size={28} />, color: "from-pink-400 to-rose-600", stats: { str: 5, spd: 5, def: 5, foc: 5 }, desc: "General health boost" },
+  { title: "MOC TYTANA", rarity: "LEGENDARNY", icon: <Flame size={28} />, color: "from-orange-500 to-red-600", stats: { str: 99, spd: 0, def: 0, foc: 0 }, desc: "Siła godna bogów" },
+  { title: "NEONOWA PRĘDKOŚĆ", rarity: "EPICKI", icon: <Zap size={28} />, color: "from-cyan-400 to-blue-600", stats: { str: 0, spd: 50, def: 0, foc: 0 }, desc: "Przełam barierę dźwięku" },
+  { title: "STALOWY KORPUS", rarity: "RZADKI", icon: <Shield size={28} />, color: "from-slate-400 to-slate-600", stats: { str: 0, spd: 0, def: 30, foc: 0 }, desc: "Twardy jak skała" },
+  { title: "SKUPIENIE ZEN", rarity: "POSPOLITY", icon: <Crown size={28} />, color: "from-emerald-400 to-green-600", stats: { str: 0, spd: 0, def: 0, foc: 10 }, desc: "Umysł ponad materią" },
+  { title: "KROK CIENIA", rarity: "EPICKI", icon: <Wind size={28} />, color: "from-indigo-500 to-purple-700", stats: { str: 5, spd: 40, def: 5, foc: 0 }, desc: "Niewidzialne przemieszczenie" },
+  { title: "OKO CYKLOPA", rarity: "RZADKI", icon: <Target size={28} />, color: "from-red-400 to-red-800", stats: { str: 0, spd: 0, def: 0, foc: 35 }, desc: "Precyzja uderzenia" },
+  { title: "PRZECIĄŻENIE", rarity: "LEGENDARNY", icon: <Dumbbell size={28} />, color: "from-yellow-400 to-orange-700", stats: { str: 60, spd: -10, def: 40, foc: 0 }, desc: "Czysty przyrost masy" },
+  { title: "WITALNOŚĆ", rarity: "POSPOLITY", icon: <Heart size={28} />, color: "from-pink-400 to-rose-600", stats: { str: 5, spd: 5, def: 5, foc: 5 }, desc: "Ogólne wzmocnienie systemu" },
 ]
 
 export function LootBoxView() {
@@ -21,7 +21,6 @@ export function LootBoxView() {
   const [isOpening, setIsOpening] = useState(false)
   const [reward, setReward] = useState<typeof REWARDS[0] | null>(null)
   
-  // Lokalny stan statystyk (w realnej apce brałbyś to z bazy/localStorage)
   const [myStats, setMyStats] = useState({ str: 0, spd: 0, def: 0, foc: 0 })
 
   const handleOpen = () => {
@@ -49,18 +48,18 @@ export function LootBoxView() {
   return (
     <div className="w-full px-2 py-4 flex flex-col items-center gap-4">
       
-      {/* --- NOWE OKNO STATYSTYK --- */}
+      {/* --- PANEL STATYSTYK --- */}
       <div className="w-full max-w-sm bg-black/40 border border-white/10 rounded-[2rem] p-4 backdrop-blur-md shadow-inner">
         <div className="flex items-center gap-2 mb-3 px-2">
           <Trophy size={16} className="text-yellow-500" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Character Attributes</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Atrybuty Jednostki</span>
         </div>
         <div className="grid grid-cols-2 gap-2">
           {[
-            { label: "STR", val: myStats.str, color: "text-orange-500" },
-            { label: "SPD", val: myStats.spd, color: "text-cyan-400" },
-            { label: "DEF", val: myStats.def, color: "text-slate-400" },
-            { label: "FOC", val: myStats.foc, color: "text-emerald-400" }
+            { label: "SIŁ", val: myStats.str, color: "text-orange-500" },
+            { label: "ZRE", val: myStats.spd, color: "text-cyan-400" },
+            { label: "WYT", val: myStats.def, color: "text-slate-400" },
+            { label: "SKU", val: myStats.foc, color: "text-emerald-400" }
           ].map(s => (
             <div key={s.label} className="bg-white/5 rounded-xl p-2 border border-white/5 flex justify-between items-center px-4">
               <span className="text-[9px] font-mono text-white/40">{s.label}</span>
@@ -74,14 +73,14 @@ export function LootBoxView() {
       <div className="w-full max-w-sm bg-zinc-900 border border-white/10 p-4 rounded-2xl flex justify-between items-center">
         <div className="flex items-center gap-3">
           <Box size={20} className="text-purple-400" />
-          <span className="text-sm font-black text-white">{lootCount} DROPS</span>
+          <span className="text-sm font-black text-white">{lootCount} ZRZUTÓW</span>
         </div>
         <button 
           onClick={handleOpen}
           disabled={lootCount <= 0 || isOpening}
           className="bg-white text-black px-6 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 disabled:opacity-20 transition-all"
         >
-          {isOpening ? "SCANNING..." : "OPEN BOX"}
+          {isOpening ? "SKANOWANIE..." : "OTWÓRZ SKRZYNIĘ"}
         </button>
       </div>
 

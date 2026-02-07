@@ -11,11 +11,11 @@ export function HoloCard({ children }: { children: React.ReactNode }) {
     if (!cardRef.current) return
     const rect = cardRef.current.getBoundingClientRect()
     
-    // Obliczanie pozycji kursora względem karty (0 do 1)
+    // Obliczanie pozycji kursora (0 do 1)
     const x = (e.clientX - rect.left) / rect.width
     const y = (e.clientY - rect.top) / rect.height
     
-    // Mocniejsza rotacja, żeby na pewno było widać (do 25 stopni)
+    // Rotacja do 30 stopni dla lepszego efektu głębi
     setRotate({ x: (y - 0.5) * 30, y: (x - 0.5) * -30 })
     setLight({ x: x * 100, y: y * 100 })
   }
@@ -24,13 +24,16 @@ export function HoloCard({ children }: { children: React.ReactNode }) {
     <motion.div
       ref={cardRef}
       onMouseMove={handleMouseMove}
-      onMouseLeave={() => { setRotate({ x: 0, y: 0 }); setLight({ x: 50, y: 50 }); }}
+      onMouseLeave={() => { 
+        setRotate({ x: 0, y: 0 }); 
+        setLight({ x: 50, y: 50 }); 
+      }}
       animate={{ rotateX: rotate.x, rotateY: rotate.y }}
       transition={{ type: "spring", stiffness: 150, damping: 20 }}
       style={{ transformStyle: "preserve-3d" }}
       className="relative group w-full"
     >
-      {/* ODBlASK - To powinno być białe i bardzo widoczne przy ruchu */}
+      {/* REFLEKS ŚWIETLNY - Dynamiczny biały blask */}
       <div 
         className="absolute inset-0 z-30 pointer-events-none rounded-2xl opacity-0 group-hover:opacity-60 transition-opacity duration-300"
         style={{
@@ -38,7 +41,7 @@ export function HoloCard({ children }: { children: React.ReactNode }) {
         }}
       />
       
-      {/* TĘCZA - Holograficzny kolor */}
+      {/* WARSTWA HOLOGRAFICZNA - Neonowe przejścia kolorystyczne */}
       <div 
         className="absolute inset-0 z-20 pointer-events-none rounded-2xl opacity-0 group-hover:opacity-30 transition-opacity duration-500"
         style={{
@@ -47,9 +50,13 @@ export function HoloCard({ children }: { children: React.ReactNode }) {
         }}
       />
 
+      {/* KONTENER TREŚCI - Wypchnięty do przodu (efekt 3D) */}
       <div style={{ transform: "translateZ(30px)" }}>
         {children}
       </div>
+
+      {/* Dodatkowy techniczny szum w tle (opcjonalny detal) */}
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay pointer-events-none rounded-2xl" />
     </motion.div>
   )
 }

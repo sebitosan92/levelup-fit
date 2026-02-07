@@ -23,7 +23,7 @@ export function LevelRing({ level, totalMinutes }: LevelRingProps) {
 
   return (
     <div className="relative flex items-center justify-center">
-      {/* Ambient pulse glow */}
+      {/* Poświaty tła (Ambient pulse glow) */}
       <div
         className="absolute w-64 h-64 rounded-full animate-ring-pulse"
         style={{
@@ -37,7 +37,7 @@ export function LevelRing({ level, totalMinutes }: LevelRingProps) {
         className="transform -rotate-90"
         aria-hidden="true"
       >
-        {/* Outer decorative ring */}
+        {/* Zewnętrzny pierścień dekoracyjny */}
         <circle
           stroke="hsl(240 8% 16% / 0.6)"
           fill="transparent"
@@ -48,7 +48,7 @@ export function LevelRing({ level, totalMinutes }: LevelRingProps) {
           cy={outerRadius + outerStroke}
         />
 
-        {/* Background track */}
+        {/* Tło ścieżki progresu */}
         <circle
           stroke="hsl(240 8% 14%)"
           fill="transparent"
@@ -58,7 +58,7 @@ export function LevelRing({ level, totalMinutes }: LevelRingProps) {
           cy={outerRadius + outerStroke}
         />
 
-        {/* Progress arc */}
+        {/* Łuk postępu (Progress arc) */}
         <motion.circle
           stroke="url(#levelGradientV2)"
           fill="transparent"
@@ -74,7 +74,7 @@ export function LevelRing({ level, totalMinutes }: LevelRingProps) {
           filter="url(#glow)"
         />
 
-        {/* Glow filter for progress */}
+        {/* Definicje filtrów i gradientów */}
         <defs>
           <linearGradient id="levelGradientV2" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="hsl(270 80% 65%)" />
@@ -91,23 +91,23 @@ export function LevelRing({ level, totalMinutes }: LevelRingProps) {
         </defs>
       </svg>
 
-      {/* Center content */}
+      {/* Treść centralna */}
       <div className="absolute flex flex-col items-center">
-        <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.25em]">
-          Level
+        <span className="text-[10px] font-mono text-white/40 uppercase tracking-[0.25em]">
+          Poziom
         </span>
         <motion.span
           key={level}
           initial={{ scale: 0.5, opacity: 0, y: 5 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          className="text-5xl font-bold text-foreground neon-purple-text font-mono leading-none mt-1"
+          className="text-5xl font-bold text-white neon-purple-text font-mono leading-none mt-1"
         >
           {level}
         </motion.span>
         <div className="flex items-center gap-1 mt-2">
-          <div className="w-1 h-1 rounded-full bg-neon-green" />
-          <span className="text-[10px] text-muted-foreground font-mono">
-            {minutesInCurrentLevel}/30 min
+          <div className="w-1 h-1 rounded-full bg-green-500 shadow-[0_0_5px_#22c55e]" />
+          <span className="text-[10px] text-white/50 font-mono uppercase tracking-tight">
+            {minutesInCurrentLevel} / 30 MIN
           </span>
         </div>
       </div>
