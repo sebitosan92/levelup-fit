@@ -9,11 +9,11 @@ import { MotivationVault } from "@/components/motivation-vault"
 import { SettingsView } from "@/components/settings-view"
 import { AuthScreen } from "@/components/auth-screen"
 import { LeaderboardView } from "@/components/leaderboard-view" 
-import { SocialView } from "@/components/social-view" // Upewnij się, że masz ten plik
+import { SocialView } from "@/components/social-view" 
 import { useAuth } from "@/lib/fitness-store"
 
 export default function Home() {
-  // UWAGA: Jeśli 'social' wywala błąd typu w TabId, dodaj go w pliku components/bottom-nav.tsx
+  // Jeśli tutaj nadal masz błąd, upewnij się, że zaktualizowałeś plik bottom-nav.tsx (krok niżej)
   const [activeTab, setActiveTab] = useState<TabId>('home')
   const { user } = useAuth()
 
@@ -24,7 +24,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#020202] text-white pb-32 relative overflow-x-hidden font-sans">
       
-      {/* --- BACKGROUND DECORATION: ULTRA-NEON LASER GRID (Zostawiamy Twoje tło) --- */}
+      {/* --- BACKGROUND DECORATION --- */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <div 
           className="absolute inset-0 opacity-[0.2]" 
@@ -104,8 +104,8 @@ export default function Home() {
               </div>
             )}
 
-            {/* DODANA NOWA ZAKŁADKA SOCIAL */}
-            {(activeTab as string) === 'social' && (
+            {/* Poprawiony warunek dla social */}
+            {activeTab === ('social' as TabId) && (
               <div className="px-4 pt-4">
                 <SocialView />
               </div>
