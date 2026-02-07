@@ -8,12 +8,14 @@ import { RewardsView } from "@/components/rewards-view"
 import { MotivationVault } from "@/components/motivation-vault"
 import { SettingsView } from "@/components/settings-view"
 import { AuthScreen } from "@/components/auth-screen"
-import { LeaderboardView } from "@/components/leaderboard-view" // Import nowego widoku
+import { LeaderboardView } from "@/components/leaderboard-view" 
+import { SocialView } from "@/components/social-view" // Upewnij się, że masz ten plik
 import { useAuth } from "@/lib/fitness-store"
 
 export default function Home() {
+  // UWAGA: Jeśli 'social' wywala błąd typu w TabId, dodaj go w pliku components/bottom-nav.tsx
   const [activeTab, setActiveTab] = useState<TabId>('home')
-  const { user, profile } = useAuth() // Rozpakowanie obiektu z useAuth
+  const { user } = useAuth()
 
   if (!user) {
     return <AuthScreen />
@@ -22,10 +24,8 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#020202] text-white pb-32 relative overflow-x-hidden font-sans">
       
-      {/* --- BACKGROUND DECORATION: ULTRA-NEON LASER GRID --- */}
+      {/* --- BACKGROUND DECORATION: ULTRA-NEON LASER GRID (Zostawiamy Twoje tło) --- */}
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        
-        {/* 1. Podstawowa Siatka */}
         <div 
           className="absolute inset-0 opacity-[0.2]" 
           style={{
@@ -37,7 +37,6 @@ export default function Home() {
           }}
         />
 
-        {/* 2. Laserowy Blask */}
         <motion.div 
           animate={{ 
             opacity: [0.2, 0.4, 0.2],
@@ -55,7 +54,6 @@ export default function Home() {
           }}
         />
 
-        {/* 3. Wielokolorowe Mgławice */}
         <motion.div 
           animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.3, 0.2] }}
           transition={{ duration: 8, repeat: Infinity }}
@@ -67,14 +65,12 @@ export default function Home() {
           className="absolute bottom-[-5%] right-[-5%] w-[60%] h-[50%] bg-green-500/20 rounded-full blur-[100px]" 
         />
         
-        {/* 4. Skanująca Linia */}
         <motion.div 
           animate={{ y: ['-100vh', '100vh'] }}
           transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
           className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500/60 to-transparent shadow-[0_0_20px_#a855f7]"
         />
 
-        {/* 5. Vignette */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,transparent_0%,#020202_90%)]" />
       </div>
 
@@ -102,10 +98,16 @@ export default function Home() {
               </div>
             )}
 
-            {/* NOWY WIDOK: RANKING */}
             {activeTab === 'leaderboard' && (
               <div className="px-4 pt-4">
                 <LeaderboardView />
+              </div>
+            )}
+
+            {/* DODANA NOWA ZAKŁADKA SOCIAL */}
+            {(activeTab as string) === 'social' && (
+              <div className="px-4 pt-4">
+                <SocialView />
               </div>
             )}
             

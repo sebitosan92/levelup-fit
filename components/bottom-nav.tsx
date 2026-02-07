@@ -4,7 +4,7 @@ import { Home, Shield, Trophy, Settings, Gift } from "lucide-react"
 import { motion } from "framer-motion"
 
 // Dodano 'leaderboard' do typu TabId
-export type TabId = "home" | "vault" | "rewards" | "settings" | "leaderboard"
+export type TabId = 'home' | 'rewards' | 'vault' | 'leaderboard' | 'social' | 'settings';
 
 interface BottomNavProps {
   activeTab: TabId
