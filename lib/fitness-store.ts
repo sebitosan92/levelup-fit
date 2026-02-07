@@ -71,12 +71,13 @@ export function useAuth() {
   const [user, setUser] = React.useState<any>(null)
   const [profile, setProfile] = React.useState<any>(null)
 
-  React.useEffect(() => {
-    const fetchProfile = async (userId: string) => {
-      const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
-      if (data) setProfile(data)
-    }
+  // Funkcja pobierania profilu wyciągnięta na zewnątrz dla ponownego użycia
+  const fetchProfile = async (userId: string) => {
+    const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+    if (data) setProfile(data)
+  }
 
+  React.useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user)
@@ -93,10 +94,13 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // Pobieramy display_name z profilu, potem z metadata, potem z maila
+  const displayName = profile?.display_name || profile?.username || user?.user_metadata?.display_name || user?.email?.split('@')[0] || "Player"
+
   return { 
     user, 
     profile,
-    display_name: profile?.display_name || user?.email?.split('@')[0] || "Player"
+    display_name: displayName
   }
 }
 
@@ -143,12 +147,20 @@ export function useWorkoutLog() {
 export async function updateUsername(newName: string) {
   const { data: { session } } = await supabase.auth.getSession()
   if (session?.user) {
+    // PRZESTROGA: Wysyłamy do OBU kolumn na wypadek, gdybyś miał jedną z nich w bazie
+    // Zapobiega to NULL w username jeśli baza tak nazywa kolumnę.
     const { error } = await supabase
       .from('profiles')
-      .upsert({ id: session.user.id, display_name: newName }, { onConflict: 'id' })
+      .upsert({ 
+        id: session.user.id, 
+        display_name: newName,
+        username: newName 
+      }, { onConflict: 'id' })
     
     if (!error) {
-      mutate("auth-user")
+      // Wymuszamy odświeżenie danych w całej aplikacji
+      await mutate("fitness-data")
+      window.dispatchEvent(new Event('visibilitychange')) // Trick na odświeżenie SWR
       return { success: true }
     }
     return { success: false, error: error.message }
