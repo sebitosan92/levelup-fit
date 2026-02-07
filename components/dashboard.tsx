@@ -5,19 +5,21 @@ import { motion, AnimatePresence } from "framer-motion"
 import { 
   Timer, Zap, TrendingUp, Edit2, BarChart3, 
   Target, Droplets, Dumbbell, Trophy, Gift,
-  Database, Users, X, Send, MessageSquare, Cpu, Search, Plus, Activity, UserPlus, UserMinus
+  Database, Users, X, Send, MessageSquare, Cpu, Search, Plus, Activity, UserPlus, UserMinus, User, CheckCircle2
 } from "lucide-react"
+
+// Importy komponentów lokalnych - upewnij się, że te pliki istnieją!
 import { LevelRing } from "./level-ring"
 import { WorkoutTimer } from "./workout-timer"
 import { WaterTracker } from "./water-tracker"
 import { HoloCard } from "./holo-card"
 import { WeatherEnvironment } from "./weather-env"
 import { StatsRadar } from "./stats-radar"
+
 import { useWeather } from "@/lib/weather-store"
 import { 
   useFitnessData, 
   useStatusMessage, 
-  updateStatusMessage, 
   useAuth,
   useWaterData,
   getTodayWorkoutMinutes,
@@ -31,338 +33,315 @@ import {
   useLootBoxes
 } from "@/lib/fitness-store"
 
+const getAvatarColor = (name: string) => {
+  const colors = [
+    'from-cyan-500/40 to-blue-600/40',
+    'from-purple-500/40 to-pink-600/40',
+    'from-emerald-500/40 to-teal-600/40',
+    'from-orange-500/40 to-red-600/40',
+    'from-indigo-500/40 to-violet-600/40'
+  ]
+  const index = name ? name.length % colors.length : 0
+  return colors[index]
+}
+
 export function Dashboard() {
   const { profile, display_name } = useAuth()
   const fitness = useFitnessData()
-  const status = useStatusMessage()
-  const water = useWaterData()
-  const workoutMins = getTodayWorkoutMinutes()
-  const messages = useMessages()
-  const friends = useFriends()
-  const allUsers = useAllUsers()
-  const lootBoxes = useLootBoxes()
+  const water = useWaterData() || 0
+  const workoutMins = typeof getTodayWorkoutMinutes === 'function' ? getTodayWorkoutMinutes() : 0
+  const messages = useMessages() || []
+  const friends = useFriends() || []
+  const allUsers = useAllUsers() || []
+  const lootBoxes = useLootBoxes() || 0
   const { vibe, temp } = useWeather()
   
-  // Stany UI
-  const [showLevelUp, setShowLevelUp] = useState(false)
   const [showVault, setShowVault] = useState(false)
   const [showSocial, setShowSocial] = useState(false)
   const [chatMsg, setChatMsg] = useState("")
   const [prevLevel, setPrevLevel] = useState(fitness?.currentLevel || 1)
 
-  // Wykrywanie Level Up
+  // STATYSTYKI - Zdefiniowane przed użyciem w JSX
+  const totalMinutes = fitness?.totalMinutes || 0
+  const currentLevel = fitness?.currentLevel || 1
+  const minsToNextLevel = 30 - (totalMinutes % 30)
+
   useEffect(() => {
     if (fitness && fitness.currentLevel > prevLevel) {
-      setShowLevelUp(true)
       setPrevLevel(fitness.currentLevel)
     }
   }, [fitness?.currentLevel, prevLevel])
 
   if (!profile && !display_name) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
-          <Activity className="w-12 h-12 text-cyan-500 opacity-20" />
-        </motion.div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Activity className="w-12 h-12 text-cyan-500 animate-pulse" />
+        <p className="text-cyan-500/50 font-mono text-[10px] uppercase tracking-widest">Establishing Neural Link...</p>
       </div>
     )
   }
 
-  const minutesToNext = 30 - ((fitness?.totalMinutes || 0) % 30)
-  const isCold = temp !== null && temp < 5
   const weatherColor = vibe === 'rainy' ? 'text-cyan-400' : 
-                       vibe === 'sunny' ? 'text-orange-400' : 
-                       isCold ? 'text-blue-500' : 'text-neon-green'
-
-  const currentStats = {
-    strength: profile?.strength || 0,
-    speed: profile?.speed || 0,
-    defense: profile?.defense || 0,
-    focus: profile?.focus || 0,
-    xp: profile?.xp || 0
-  }
-
-  const getRank = (lvl: number) => {
-    if (lvl >= 20) return "ELITE VANGUARD"
-    if (lvl >= 10) return "STRIKER"
-    return "RECRUIT"
-  }
-
-  const quests = [
-    { 
-      id: 'q1', title: 'Hydration Protocol', 
-      desc: 'Drink 2000ml of water', 
-      icon: <Droplets size={16} className="text-cyan-400" />,
-      progress: water?.amount || 0, goal: 2000, reward: 15, stat: 'def' as const
-    },
-    { 
-      id: 'q2', title: 'Iron Will', 
-      desc: '30 min workout today', 
-      icon: <Dumbbell size={16} className="text-purple-400" />,
-      progress: workoutMins, goal: 30, reward: 25, stat: 'str' as const
-    }
-  ]
+                        vibe === 'sunny' ? 'text-orange-400' : 'text-emerald-400'
 
   const handleSendMessage = async () => {
     if (!chatMsg.trim()) return
-    await sendChatMessage(chatMsg, display_name)
-    setChatMsg("")
+    try {
+      if (typeof sendChatMessage === 'function') {
+        await sendChatMessage(chatMsg, display_name || "Unknown Operator")
+        setChatMsg("")
+      }
+    } catch (err) {
+      console.error("Signal failed:", err)
+    }
   }
 
   return (
-    <div className="relative px-4 pb-24 space-y-6 pt-8 min-h-screen bg-black overflow-x-hidden">
+    <div className="relative space-y-6 pb-24 px-4 sm:px-0">
       <WeatherEnvironment />
       
       <div className="relative z-10 space-y-6">
-        
-        {/* HEADER SECTION */}
+        {/* HEADER */}
         <div className="flex justify-between items-start">
           <div className="space-y-1">
-            <motion.p 
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              className={`text-[10px] font-mono uppercase tracking-[0.2em] ${weatherColor}`}
-            >
-              {vibe || 'standard'} protocol active {temp !== null && `[${temp}°C]`}
-            </motion.p>
-            
-            <h1 className="text-xl font-bold font-mono italic">
-              <span className="text-neon-purple">LEVEL</span>
-              <span className={weatherColor}>UP</span> FIT
-            </h1>
-
-            <div 
-              onClick={() => { 
-                const s = prompt("Update your status:", status); 
-                if(s !== null) updateStatusMessage(s); 
-              }} 
-              className="cursor-pointer flex items-center gap-2 mt-2 group"
-            >
-              <p className="text-sm font-mono text-muted-foreground italic">"{status || 'Initializing...'}"</p>
-              <Edit2 size={10} className="text-neon-purple opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
+            <p className={`text-[10px] font-mono uppercase tracking-widest ${weatherColor}`}>
+              {vibe || 'standard'} active {temp !== null && `[${temp}°C]`}
+            </p>
+            <h1 className="text-xl font-bold font-mono italic text-white uppercase tracking-tighter">Nexus Dashboard</h1>
           </div>
 
           <div className="flex gap-2">
-            <motion.button 
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setShowSocial(true)}
-              className="p-3 glass-card rounded-xl border border-cyan-500/50 bg-cyan-500/10 text-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.2)]"
-            >
+            <button onClick={() => setShowSocial(true)} className="p-3 glass-card rounded-xl border border-cyan-500/50 text-cyan-400 bg-cyan-500/10 transition-all hover:bg-cyan-500/20 active:scale-90">
               <Users size={20} />
-            </motion.button>
-
-            <motion.button 
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setShowVault(true)}
-              className="relative p-3 glass-card rounded-xl border border-neon-purple/50 bg-purple-500/10 text-neon-purple shadow-[0_0_10px_rgba(168,85,247,0.2)]"
-            >
+            </button>
+            <button onClick={() => setShowVault(true)} className="relative p-3 glass-card rounded-xl border border-purple-500/50 text-purple-400 bg-purple-500/10 transition-all hover:bg-purple-500/20 active:scale-90">
               <Database size={20} />
               {lootBoxes > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-[8px] font-black text-white rounded-full flex items-center justify-center animate-bounce">
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-[8px] text-white rounded-full flex items-center justify-center font-bold animate-pulse">
                   {lootBoxes}
                 </span>
               )}
-            </motion.button>
+            </button>
           </div>
         </div>
 
-        {/* DAILY LOGIN BONUS */}
-        <motion.button 
-          whileTap={{ scale: 0.95 }}
+        {/* DAILY BONUS */}
+        <button 
           onClick={() => {
-            const lastClaim = localStorage.getItem('last-daily');
-            const today = new Date().toDateString();
-            if(lastClaim === today) {
-              alert("Daily reward already collected.");
-            } else {
-              localStorage.setItem('last-daily', today);
-              claimQuestReward(50, 'foc', 10);
+            if (typeof claimQuestReward === 'function') {
+              claimQuestReward(50, 'foc', 10)
             }
-          }}
-          className="w-full p-4 rounded-2xl bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 flex items-center justify-between group overflow-hidden relative"
+          }} 
+          className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between shadow-lg hover:bg-white/10 transition-all group active:scale-[0.98]"
         >
-          <div className="flex items-center gap-3 relative z-10">
-            <div className="p-2 bg-yellow-500/20 rounded-lg">
-              <Gift size={18} className="text-yellow-500 group-hover:rotate-12 transition-transform" />
-            </div>
-            <div className="text-left">
-              <p className="text-xs font-bold uppercase tracking-wider text-yellow-500">Daily Neural Link</p>
-              <p className="text-[10px] text-white/40 font-mono">Collect daily XP & Focus</p>
-            </div>
+          <div className="flex items-center gap-3">
+            <Gift size={18} className="text-yellow-500 group-hover:rotate-12 transition-transform" />
+            <span className="text-xs font-bold text-white uppercase tracking-tight">Neural Link Daily</span>
           </div>
-          <div className="text-[10px] font-black px-3 py-1 bg-yellow-500/20 rounded-full text-yellow-500 border border-yellow-500/30 relative z-10">
-            CLAIM
-          </div>
-        </motion.button>
+          <span className="text-[10px] font-black text-yellow-500 uppercase">Claim Reward</span>
+        </button>
 
-        {/* LEVEL PROGRESS */}
+        {/* MAIN STATS RING */}
         <div className="flex justify-center py-4">
-          <LevelRing level={fitness?.currentLevel || 1} totalMinutes={fitness?.totalMinutes || 0} />
+          <LevelRing level={currentLevel} totalMinutes={totalMinutes} />
         </div>
-
-        {/* STATS GRID */}
+        
+        {/* QUICK STATS */}
         <div className="grid grid-cols-2 gap-4">
           <HoloCard>
-            <div className="p-4 glass-card rounded-2xl h-full flex flex-col items-start">
-              <Timer size={14} className="text-neon-purple mb-2" />
-              <p className="text-2xl font-black italic">{fitness?.totalMinutes || 0}</p>
-              <p className="text-[10px] text-muted-foreground uppercase font-mono tracking-tight">Total Minutes</p>
+            <div className="p-4 glass-card rounded-2xl">
+              <Timer size={14} className="text-purple-400 mb-2"/>
+              <p className="text-[10px] text-white/40 uppercase font-bold mb-1">Total Time</p>
+              <p className="text-2xl font-black text-white">{totalMinutes}<span className="text-xs ml-1 text-purple-400">m</span></p>
             </div>
           </HoloCard>
           <HoloCard>
-            <div className="p-4 glass-card rounded-2xl h-full flex flex-col items-start">
-              <TrendingUp size={14} className={`${weatherColor} mb-2`} />
-              <p className="text-2xl font-black italic">{minutesToNext}</p>
-              <p className="text-[10px] text-muted-foreground uppercase font-mono tracking-tight">To Next Level</p>
+            <div className="p-4 glass-card rounded-2xl">
+              <TrendingUp size={14} className="text-cyan-400 mb-2"/>
+              <p className="text-[10px] text-white/40 uppercase font-bold mb-1">Next Level</p>
+              <p className="text-2xl font-black text-white">
+                {minsToNextLevel}
+                <span className="text-xs ml-1 text-cyan-400">m</span>
+              </p>
             </div>
           </HoloCard>
-        </div>
-
-        {/* RADAR & XP BAR */}
-        <motion.div className="rounded-3xl glass-card p-6 border border-white/10 bg-gradient-to-br from-purple-500/5 to-transparent">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <BarChart3 size={14} className="text-neon-purple" />
-              <h3 className="text-[10px] font-mono text-muted-foreground uppercase tracking-[0.2em]">Genetic Potential</h3>
-            </div>
-          </div>
-          <StatsRadar stats={currentStats} />
-          <div className="mt-8 space-y-2">
-            <div className="flex justify-between items-end">
-              <p className="text-[9px] font-mono text-white/40 uppercase tracking-widest">Evolution Progress</p>
-              <p className="text-[10px] font-mono text-neon-purple font-bold italic">{currentStats.xp % 100} / 100 XP</p>
-            </div>
-            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 p-[1px]">
-              <motion.div animate={{ width: `${currentStats.xp % 100}%` }} className="h-full bg-gradient-to-r from-purple-800 to-neon-purple rounded-full shadow-[0_0_15px_rgba(168,85,247,0.6)]" />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* QUESTS */}
-        <div className="space-y-4">
-          {quests.map(q => {
-            const isDone = q.progress >= q.goal
-            return (
-              <div key={q.id} className={`p-4 rounded-2xl border transition-all duration-500 ${isDone ? 'bg-green-500/5 border-green-500/30' : 'bg-white/5 border-white/10'}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${isDone ? 'bg-green-500/20' : 'bg-black/20'}`}>{q.icon}</div>
-                    <div>
-                      <p className={`text-sm font-bold ${isDone ? 'text-green-400' : 'text-white'}`}>{q.title}</p>
-                      <p className="text-[10px] text-white/40 font-mono italic">{q.desc}</p>
-                    </div>
-                  </div>
-                  {isDone && (
-                    <button onClick={() => claimQuestReward(q.reward, q.stat, 5)} className="bg-green-500 text-black text-[10px] font-black px-4 py-1.5 rounded-full uppercase">CLAIM</button>
-                  )}
-                </div>
-              </div>
-            )
-          })}
         </div>
 
         <WorkoutTimer />
         <WaterTracker />
+
+        {/* BIOMETRICS */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <BarChart3 size={14} className="text-cyan-400" />
+            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Biometric Analysis</h2>
+          </div>
+          <HoloCard>
+            <div className="p-6 glass-card rounded-[2.5rem] flex justify-center items-center min-h-[300px] overflow-hidden">
+              <StatsRadar />
+            </div>
+          </HoloCard>
+        </div>
+
+        {/* QUESTS */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <Trophy size={14} className="text-yellow-500" />
+            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Active Missions</h2>
+          </div>
+          <div className="space-y-3">
+            {[
+              { id: 'q1', title: 'Hydration Protocol', desc: 'Drink 2000ml of water', progress: water, total: 2000, reward: '50 XP' },
+              { id: 'q2', title: 'Stamina Build', desc: 'Work out for 30 min', progress: workoutMins, total: 30, reward: '100 XP' }
+            ].map(quest => {
+              const percentage = Math.min(100, Math.round(((Number(quest.progress) || 0) / (Number(quest.total) || 1)) * 100))
+              return (
+                <div key={quest.id} className="p-4 glass-card rounded-2xl border border-white/5 flex items-center justify-between hover:bg-white/5 transition-colors">
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-white">{quest.title}</p>
+                    <p className="text-[10px] text-white/40">{quest.desc}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black text-cyan-400">{quest.reward}</p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div className="h-full bg-cyan-500" style={{ width: `${percentage}%` }} />
+                      </div>
+                      <p className="text-[9px] text-white/20 font-mono">{percentage}%</p>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </div>
 
-      {/* --- OVERLAYS --- */}
-
-      {/* NEURAL VAULT */}
-      <AnimatePresence>
-        {showVault && (
-          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed inset-0 z-[150] bg-black p-6 overflow-y-auto">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-3"><Database className="text-neon-purple" /><h2 className="text-2xl font-black italic uppercase">Neural Vault</h2></div>
-              <button onClick={() => setShowVault(false)} className="p-2 bg-white/5 rounded-full"><X /></button>
-            </div>
-            <HoloCard><div className="p-6 rounded-2xl border border-white/10 bg-gradient-to-br from-purple-500/20 to-transparent"><Cpu size={24} className="text-neon-purple mb-4" /><p className="text-lg font-black italic uppercase">Basic Augment</p><p className="text-xs font-mono text-white/40">Open Loot Boxes to find gear.</p></div></HoloCard>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* SOCIAL LINK */}
+      {/* SOCIAL POPUP */}
       <AnimatePresence>
         {showSocial && (
-          <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="fixed inset-0 z-[150] bg-black flex flex-col p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3"><Users className="text-cyan-400" /><h2 className="text-2xl font-black italic uppercase">Social Link</h2></div>
-              <button onClick={() => setShowSocial(false)} className="p-2 bg-white/5 rounded-full"><X /></button>
-            </div>
-
-            {/* TWOI ZNAJOMI */}
-            <div className="mb-4 overflow-x-auto flex gap-4 pb-2 border-b border-white/10">
-              {friends && friends.length > 0 ? friends.map(f => (
-                <div key={f.id} className="flex-shrink-0 text-center space-y-1 relative group">
-                  <div className="w-12 h-12 rounded-full border border-cyan-500/30 bg-cyan-500/10 flex items-center justify-center font-black text-cyan-400">
-                    {f.display_name?.[0].toUpperCase()}
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowSocial(false)} className="fixed inset-0 z-[140] bg-black/80 backdrop-blur-md" />
+            <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 pointer-events-none">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }} 
+                animate={{ opacity: 1, scale: 1, y: 0 }} 
+                exit={{ opacity: 0, scale: 0.9, y: 20 }} 
+                className="w-full max-w-[500px] h-[85vh] bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] shadow-[0_0_60px_rgba(0,0,0,1)] flex flex-col overflow-hidden pointer-events-auto"
+              >
+                <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/5 shrink-0">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-cyan-500/10 rounded-lg"><Users className="text-cyan-400" size={20} /></div>
+                    <h2 className="text-base font-black uppercase italic text-white tracking-widest">Social Link</h2>
                   </div>
-                  <p className="text-[8px] font-mono uppercase text-white/60">{f.display_name?.slice(0, 6)}</p>
-                  <button onClick={() => removeFriend(f.id)} className="absolute -top-1 -right-1 bg-red-500 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <UserMinus size={10} className="text-white" />
-                  </button>
+                  <button onClick={() => setShowSocial(false)} className="p-2 hover:bg-white/10 rounded-full text-white/50 transition-colors"><X size={24} /></button>
                 </div>
-              )) : (
-                <p className="text-[8px] font-mono text-white/20 uppercase tracking-widest py-4">No active connections...</p>
-              )}
-            </div>
 
-            {/* WYSZUKIWARKA GLOBALNA */}
-            <div className="mb-4">
-              <p className="text-[10px] font-mono text-cyan-400 uppercase mb-2 tracking-widest">Global Directory</p>
-              <div className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
-                {allUsers.filter(u => u.id !== profile?.id && !friends.find(f => f.id === u.id)).map(user => (
-                  <div key={user.id} className="flex items-center justify-between p-2 bg-white/5 rounded-xl border border-white/5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold">
-                        {user.display_name?.[0]}
-                      </div>
-                      <span className="text-xs font-mono">{user.display_name} (Lvl {user.level})</span>
+                <div className="flex-1 flex flex-col min-h-0 p-5 space-y-6 overflow-y-auto scrollbar-hide">
+                  <div className="shrink-0 space-y-3">
+                    <p className="text-[10px] text-cyan-400 uppercase font-bold tracking-[0.2em]">Active Nodes ({friends.length})</p>
+                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                      {friends.length === 0 && <p className="text-[10px] text-white/20 italic">No nodes connected...</p>}
+                      {friends.map(f => (
+                        <div key={f.id} className="flex-shrink-0 text-center relative group">
+                          <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${getAvatarColor(f.display_name)} border border-cyan-500/30 flex items-center justify-center font-black text-white text-xs shadow-lg`}>
+                            {f.display_name ? f.display_name[0].toUpperCase() : <User size={14}/>}
+                          </div>
+                          <button 
+                            onClick={() => { if(typeof removeFriend === 'function') removeFriend(f.id) }} 
+                            className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1 border border-black shadow-lg hover:scale-110 transition-transform"
+                          >
+                            <UserMinus size={10} />
+                          </button>
+                          <p className="text-[8px] mt-1.5 text-white/60 font-mono">{f.display_name?.slice(0, 8)}</p>
+                        </div>
+                      ))}
                     </div>
-                    <button onClick={() => addFriend(user.id)} className="p-1.5 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500 hover:text-black transition-all">
-                      <UserPlus size={14} />
+                  </div>
+
+                  <div className="shrink-0 space-y-3">
+                    <p className="text-[10px] text-purple-400 uppercase font-bold tracking-[0.2em]">Global Directory</p>
+                    <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+                      {allUsers.filter(u => u.id !== profile?.id && !friends.find(f => f.id === u.id)).map(user => (
+                        <div key={user.id} className="flex-shrink-0 flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5">
+                          <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getAvatarColor(user.display_name || "U")} flex items-center justify-center text-[10px] font-bold text-white`}>
+                            {(user.display_name || "U")[0].toUpperCase()}
+                          </div>
+                          <div className="flex flex-col pr-1">
+                            <span className="text-[10px] text-white font-mono leading-none mb-1">{user.display_name || "Unknown"}</span>
+                            <span className="text-[8px] text-cyan-500/50 font-black">LVL {user.level || 1}</span>
+                          </div>
+                          <button 
+                            onClick={() => { if(typeof addFriend === 'function') addFriend(user.id) }} 
+                            className="p-1.5 bg-cyan-500/10 text-cyan-400 rounded-lg hover:bg-cyan-500 hover:text-black transition-all"
+                          >
+                            <UserPlus size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 flex flex-col min-h-0 space-y-3 overflow-hidden">
+                    <p className="text-[10px] text-white/30 uppercase font-bold tracking-[0.2em]">Encrypted Comms</p>
+                    <div className="flex-1 bg-black/40 rounded-[2rem] border border-white/5 p-4 overflow-y-auto space-y-4 scrollbar-hide">
+                      {messages.length === 0 && <p className="text-center text-[10px] text-white/10 mt-10 uppercase tracking-[0.3em]">No signals detected</p>}
+                      {messages.map(m => (
+                        <div key={m.id} className={`flex items-start gap-2 ${m.user_id === profile?.id ? 'flex-row-reverse' : 'flex-row'}`}>
+                          <div className={`w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[8px] font-bold text-white shadow-lg bg-gradient-to-br ${getAvatarColor(m.display_name || "A")}`}>
+                            {(m.display_name || "A")[0].toUpperCase()}
+                          </div>
+                          <div className={`flex flex-col ${m.user_id === profile?.id ? 'items-end' : 'items-start'}`}>
+                            <p className="text-[7px] text-cyan-400/40 uppercase mb-1 font-mono">{m.display_name}</p>
+                            <div className={`p-3 rounded-2xl text-[13px] max-w-[240px] leading-relaxed ${m.user_id === profile?.id ? 'bg-cyan-500/20 text-cyan-50 border border-cyan-500/20' : 'bg-white/5 text-white/80 border border-white/5'}`}>
+                              {m.text}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 bg-white/5 border-t border-white/5 shrink-0">
+                  <div className="flex gap-3">
+                    <input 
+                      value={chatMsg} 
+                      onChange={(e) => setChatMsg(e.target.value)} 
+                      onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} 
+                      placeholder="Type signal..." 
+                      className="flex-1 bg-black/60 border border-white/10 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-cyan-500/40 transition-all placeholder:text-white/20" 
+                    />
+                    <button onClick={handleSendMessage} className="p-4 bg-cyan-500 text-black rounded-2xl shadow-[0_0_20px_#06b6d4] active:scale-95 transition-transform group">
+                      <Send size={22} className="group-hover:translate-x-1 transition-transform" />
                     </button>
                   </div>
-                ))}
-              </div>
+                </div>
+              </motion.div>
             </div>
-
-            {/* CZAT */}
-            <div className="flex-1 flex flex-col min-h-0 bg-white/5 rounded-3xl border border-white/10 p-4 shadow-inner">
-              <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
-                {messages.map(m => (
-                  <div key={m.id} className={`space-y-1 ${m.user_id === profile?.id ? 'items-end' : 'items-start'} flex flex-col`}>
-                    <p className="text-[9px] font-mono text-cyan-400 uppercase">{m.display_name}</p>
-                    <div className={`p-3 bg-white/5 rounded-2xl border border-white/5 text-xs text-white/80 italic max-w-[85%] ${m.user_id === profile?.id ? 'rounded-tr-none bg-cyan-500/5' : 'rounded-tl-none'}`}>
-                      {m.text}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <input 
-                  value={chatMsg} onChange={(e) => setChatMsg(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Transmit signal..."
-                  className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs font-mono outline-none focus:border-cyan-500/50 text-white"
-                />
-                <button onClick={handleSendMessage} className="p-3 bg-cyan-500 text-black rounded-xl hover:bg-cyan-400 transition-colors"><Send size={18} /></button>
-              </div>
-            </div>
-          </motion.div>
+          </>
         )}
       </AnimatePresence>
 
-      {/* LEVEL UP OVERLAY */}
       <AnimatePresence>
-        {showLevelUp && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-xl p-6 text-center">
-            <motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }} className="space-y-6">
-              <Trophy size={100} className="text-yellow-400 mx-auto" />
-              <h2 className="text-5xl font-black italic text-white uppercase tracking-tighter">Level Up!</h2>
-              <p className="text-xl font-mono text-neon-purple font-bold">STAGE {fitness?.currentLevel || 1} REACHED</p>
-              <button onClick={() => setShowLevelUp(false)} className="w-full py-4 bg-white text-black font-black uppercase rounded-2xl shadow-[0_0_30px_rgba(255,255,255,0.3)]">Continue Protocol</button>
-            </motion.div>
+        {showVault && (
+          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="fixed inset-0 z-[200] bg-[#050505] p-6 overflow-y-auto">
+            <div className="flex items-center justify-between mb-8 text-white">
+              <div className="flex items-center gap-3">
+                <Database className="text-purple-400" />
+                <h2 className="text-2xl font-black uppercase tracking-tighter italic">Neural Vault</h2>
+              </div>
+              <button onClick={() => setShowVault(false)} className="p-3 bg-white/5 rounded-full hover:bg-white/10 transition-colors"><X size={24} /></button>
+            </div>
+            
+            <div className="p-8 rounded-[3rem] border border-purple-500/20 bg-purple-500/5 text-white flex flex-col items-center justify-center min-h-[400px]">
+              <div className="relative mb-6">
+                <Cpu className="text-purple-500 animate-pulse" size={64}/>
+                <div className="absolute inset-0 bg-purple-500/20 blur-2xl rounded-full" />
+              </div>
+              <p className="text-purple-400 font-mono text-sm uppercase tracking-widest text-center mb-2">Neural Scan Complete</p>
+              <p className="text-white/30 text-xs text-center">No active augments or loot boxes detected in this sector.</p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

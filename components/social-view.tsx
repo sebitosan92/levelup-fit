@@ -2,36 +2,22 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Users, 
-  MessageSquare, 
-  Send, 
-  Trophy, 
-  Zap, 
-  Globe,
-  ShieldCheck
-} from "lucide-react"
-import { 
-  useMessages, 
-  useFriends, 
-  useAuth, 
-  sendChatMessage 
-} from "@/lib/fitness-store"
+import { Users, Send } from "lucide-react"
+import { useMessages, useFriends, useAuth, sendChatMessage } from "@/lib/fitness-store"
 
 export function SocialView() {
   const [activeSubTab, setActiveSubTab] = useState<'chat' | 'friends'>('chat')
   const [message, setMessage] = useState('')
-  const { display_name } = useAuth()
+  const { display_name, profile } = useAuth()
   const messages = useMessages()
   const friends = useFriends()
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Auto-scroll do dołu czatu
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [messages])
+  }, [messages, activeSubTab])
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,146 +27,75 @@ export function SocialView() {
   }
 
   return (
-    <div className="space-y-6 pb-20">
-      {/* --- HEADER --- */}
-      <div className="flex items-center justify-between px-2">
-        <div>
-          <h2 className="text-2xl font-black italic tracking-tighter flex items-center gap-2">
-            <Users className="w-6 h-6 text-cyan-400" />
-            COMMUNITY
-          </h2>
-          <p className="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-bold">Nexus Hub Online</p>
-        </div>
-        
-        <div className="flex bg-white/5 p-1 rounded-xl border border-white/10 backdrop-blur-md">
+    /* Używamy !important w stylu liniowym, aby przebić się przez globals.css 
+       Jeśli po wklejeniu tego nadal nie widzisz ZIELONEGO tła, znaczy że edytujemy zły plik.
+    */
+    <div 
+      className="w-full max-w-[340px] mx-auto overflow-hidden rounded-[2rem] border border-white/20 shadow-2xl"
+      style={{ 
+        height: '240px !important', 
+        maxHeight: '240px !important',
+        minHeight: '240px !important',
+        background: 'linear-gradient(to bottom, #0a0a0a, #111) !important',
+        display: 'flex',
+        flexDirection: 'column'
+      } as any}
+    >
+      
+      {/* HEADER - Bardzo niski */}
+      <div className="flex items-center justify-between p-2 bg-white/5 border-b border-white/10">
+        <span className="text-[9px] font-black uppercase text-cyan-400 px-2 italic">Neural.Link</span>
+        <div className="flex gap-1 bg-black/50 p-0.5 rounded-lg">
           <button 
             onClick={() => setActiveSubTab('chat')}
-            className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${
-              activeSubTab === 'chat' ? 'bg-cyan-500 text-black shadow-[0_0_15px_#06b6d4]' : 'text-slate-400'
-            }`}
-          >
-            CHAT
-          </button>
+            className={`px-3 py-1 rounded-md text-[8px] font-bold ${activeSubTab === 'chat' ? 'bg-cyan-500 text-black' : 'text-white/40'}`}
+          >CHAT</button>
           <button 
             onClick={() => setActiveSubTab('friends')}
-            className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${
-              activeSubTab === 'friends' ? 'bg-purple-500 text-white shadow-[0_0_15px_#a855f7]' : 'text-slate-400'
-            }`}
-          >
-            FRIENDS
-          </button>
+            className={`px-3 py-1 rounded-md text-[8px] font-bold ${activeSubTab === 'friends' ? 'bg-purple-500 text-white' : 'text-white/40'}`}
+          >FRIENDS</button>
         </div>
       </div>
 
-      <AnimatePresence mode="wait">
-        {activeSubTab === 'chat' ? (
-          <motion.div 
-            key="chat"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="flex flex-col h-[500px] bg-black/40 border border-white/5 rounded-3xl overflow-hidden backdrop-blur-sm shadow-2xl"
-          >
-            {/* Chat Messages */}
-            <div 
-              ref={scrollRef}
-              className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide"
+      {/* CONTENT - Sztywna wysokość dla scrolla */}
+      <div className="flex-1 min-h-0 overflow-hidden relative">
+        <AnimatePresence mode="wait">
+          {activeSubTab === 'chat' ? (
+            <motion.div 
+              key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} 
+              className="flex flex-col h-full"
             >
-              {messages.length === 0 && (
-                <div className="h-full flex flex-col items-center justify-center text-slate-600 italic text-sm">
-                  <Globe className="w-8 h-8 mb-2 opacity-20" />
-                  <p>Silence in the nexus...</p>
+              <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-2 scrollbar-hide text-[10px]">
+                {messages.map((msg) => (
+                  <div key={msg.id} className={`flex flex-col ${msg.user_id === profile?.id ? 'items-end' : 'items-start'}`}>
+                    <div className={`px-2 py-1 rounded-lg ${msg.user_id === profile?.id ? 'bg-cyan-500/20 text-cyan-100' : 'bg-white/5 text-white/70'}`}>
+                      {msg.text}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* INPUT AREA */}
+              <form onSubmit={handleSend} className="p-2 bg-black/40 border-t border-white/10 flex gap-2">
+                <input 
+                  value={message} onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Transmit..."
+                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[10px] outline-none"
+                />
+                <button type="submit" className="bg-cyan-500 p-1.5 rounded-lg text-black"><Send size={12} /></button>
+              </form>
+            </motion.div>
+          ) : (
+            <div className="p-3 space-y-1 overflow-y-auto h-full scrollbar-hide">
+              {friends.map(f => (
+                <div key={f.id} className="flex justify-between p-1.5 bg-white/5 rounded-lg border border-white/5">
+                  <span className="text-[10px] font-bold">{f.display_name}</span>
+                  <span className="text-[8px] text-purple-400">LVL {f.level}</span>
                 </div>
-              )}
-              {messages.map((msg) => (
-                <motion.div 
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  key={msg.id} 
-                  className={`flex flex-col ${msg.display_name === display_name ? 'items-end' : 'items-start'}`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-black uppercase text-cyan-500/70 tracking-tighter">
-                      {msg.display_name}
-                    </span>
-                  </div>
-                  <div className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm ${
-                    msg.display_name === display_name 
-                      ? 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-100 rounded-tr-none' 
-                      : 'bg-white/5 border border-white/10 text-slate-300 rounded-tl-none'
-                  }`}>
-                    {msg.text}
-                  </div>
-                </motion.div>
               ))}
             </div>
-
-            {/* Input Area */}
-            <form onSubmit={handleSend} className="p-4 bg-white/5 border-t border-white/10 flex gap-2">
-              <input 
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Type a message..."
-                className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-cyan-500/50 transition-all"
-              />
-              <button 
-                type="submit"
-                className="bg-cyan-500 hover:bg-cyan-400 text-black p-2 rounded-xl transition-all shadow-[0_0_15px_rgba(6,182,212,0.4)]"
-              >
-                <Send className="w-5 h-5" />
-              </button>
-            </form>
-          </motion.div>
-        ) : (
-          <motion.div 
-            key="friends"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="space-y-3"
-          >
-            {friends.map((friend) => (
-              <div 
-                key={friend.id}
-                className="bg-gradient-to-r from-white/5 to-transparent border border-white/10 p-4 rounded-2xl flex items-center justify-between group hover:border-purple-500/50 transition-all"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center group-hover:shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all">
-                    <span className="text-purple-400 font-black text-xl">{friend.display_name[0].toUpperCase()}</span>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-200 flex items-center gap-2">
-                      {friend.display_name}
-                      <ShieldCheck className="w-3 h-3 text-cyan-400" />
-                    </h3>
-                    <p className="text-[10px] text-slate-500 italic">"{friend.status_message || 'No status'}"</p>
-                  </div>
-                </div>
-                
-                <div className="text-right">
-                  <div className="flex items-center gap-1 justify-end text-purple-400 font-black text-sm italic">
-                    <Zap className="w-3 h-3" />
-                    LVL {friend.level}
-                  </div>
-                  <div className="text-[9px] text-slate-600 font-bold uppercase tracking-tighter">Active Warrior</div>
-                </div>
-              </div>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* --- QUICK STAT CARD --- */}
-      <div className="bg-gradient-to-br from-cyan-500/20 to-purple-500/20 rounded-3xl p-6 border border-white/10 relative overflow-hidden">
-        <div className="relative z-10 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-black text-cyan-400 uppercase tracking-widest mb-1">Global Rank</p>
-            <h4 className="text-3xl font-black italic tracking-tighter">#24</h4>
-          </div>
-          <Trophy className="w-12 h-12 text-yellow-500/40 rotate-12" />
-        </div>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16" />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )

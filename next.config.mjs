@@ -1,11 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // Zakomentuj lub usuń poniższą linię przed pushem na Vercela
+  // output: 'export', 
   images: {
-    unoptimized: true,
+    unoptimized: true, 
   },
 }
 
-export default nextConfig
+export default nextConfig;

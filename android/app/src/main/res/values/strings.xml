@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Level UP Fit</string>
+    <string name="title_activity_main">Level UP Fit</string>
+    <string name="package_name">com.nexus.fit</string>
+    <string name="custom_url_scheme">com.nexus.fit</string>
+</resources>
