@@ -60,26 +60,41 @@ export function playSound(type: 'water' | 'levelup' | 'loot') {
 export function useAuth() {
   const [user, setUser] = React.useState<any>(null)
   const [profile, setProfile] = React.useState<any>(null)
+  const [initError, setInitError] = React.useState<string | null>(null)
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
-    if (data) setProfile(data)
+    try {
+      const { data } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+      if (data) setProfile(data)
+    } catch (e) {
+      console.error("Failed to fetch profile:", e)
+    }
   }
 
   React.useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) { setUser(session.user); fetchProfile(session.user.id); }
-    })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
-      else setProfile(null)
-    })
-    return () => subscription.unsubscribe()
+    let subscription: { unsubscribe: () => void } | null = null
+    try {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) { setUser(session.user); fetchProfile(session.user.id); }
+      }).catch((e) => {
+        console.error("Session fetch failed:", e)
+        setInitError("Supabase is not configured. Please set up your environment variables.")
+      })
+      const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user ?? null)
+        if (session?.user) fetchProfile(session.user.id)
+        else setProfile(null)
+      })
+      subscription = data.subscription
+    } catch (e: any) {
+      console.error("Auth initialization failed:", e)
+      setInitError(e?.message || "Failed to initialize authentication.")
+    }
+    return () => { subscription?.unsubscribe() }
   }, [])
 
   return { 
-    user, profile, 
+    user, profile, initError,
     display_name: profile?.display_name || profile?.username || user?.email?.split('@')[0] || "Player" 
   }
 }

@@ -14,7 +14,25 @@ import { useAuth } from "@/lib/fitness-store"
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>('home')
-  const { user } = useAuth()
+  const { user, initError } = useAuth()
+
+  if (initError) {
+    return (
+      <main className="min-h-screen bg-[#020202] text-white flex items-center justify-center px-6">
+        <div className="max-w-sm text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/20 flex items-center justify-center mx-auto border border-red-500/50">
+            <span className="text-2xl font-bold text-red-400">!</span>
+          </div>
+          <h1 className="text-xl font-bold font-mono">Configuration Required</h1>
+          <p className="text-sm text-gray-400 font-mono leading-relaxed">{initError}</p>
+          <p className="text-xs text-gray-500 font-mono">
+            Set <code className="text-purple-400">NEXT_PUBLIC_SUPABASE_URL</code> and{' '}
+            <code className="text-purple-400">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in your environment variables.
+          </p>
+        </div>
+      </main>
+    )
+  }
 
   if (!user) {
     return <AuthScreen />

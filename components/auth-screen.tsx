@@ -19,17 +19,15 @@ export function AuthScreen() {
     setError("")
 
     try {
-      // Wywołujemy odpowiednią funkcję
       const result = mode === "login"
         ? await loginUser(username, password)
         : await signupUser(username, password)
 
-      // Sprawdzamy wynik - używamy rzutowania 'as any' jeśli Twój store nie ma zdefiniowanych typów powrotnych
-      if (result && !(result as any).success) {
-        setError((result as any).error || "Something went wrong")
+      if (result?.error) {
+        setError(result.error.message || "Something went wrong")
       }
-    } catch (err) {
-      setError("Connection protocol failed")
+    } catch (err: any) {
+      setError(err?.message || "Connection protocol failed. Check your Supabase configuration.")
     } finally {
       setLoading(false)
     }
