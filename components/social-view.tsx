@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Users, Send, MessageSquare } from "lucide-react"
 import { useMessages, useFriends, useAuth, sendChatMessage } from "@/lib/fitness-store"
 
-// Logika kolorów awatarów zgodna z Twoim Dashboardem
+// Logika kolorów awatarów - dodano zabezpieczenie przed pustym name
 const getAvatarColor = (name: string) => {
+  const safeName = name || "Wojownik";
   const colors = [
     'from-cyan-500/40 to-blue-600/40', 
     'from-purple-500/40 to-pink-600/40', 
@@ -14,7 +15,7 @@ const getAvatarColor = (name: string) => {
     'from-orange-500/40 to-red-600/40', 
     'from-indigo-500/40 to-violet-600/40'
   ]
-  const index = name ? name.length % colors.length : 0
+  const index = safeName.length % colors.length
   return colors[index]
 }
 
@@ -77,19 +78,20 @@ export function SocialView() {
               <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-6 scrollbar-hide">
                 {messages.length > 0 ? messages.map((msg) => {
                   const isMe = msg.user_id === profile?.id;
+                  const senderName = msg.display_name || "Wojownik";
                   return (
                     <div key={msg.id} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
                       {/* AWATAR */}
-                      <div className={`flex-none w-8 h-8 rounded-full bg-gradient-to-br ${getAvatarColor(msg.display_name || 'System')} flex items-center justify-center border border-white/10 shadow-lg`}>
+                      <div className={`flex-none w-8 h-8 rounded-full bg-gradient-to-br ${getAvatarColor(senderName)} flex items-center justify-center border border-white/10 shadow-lg`}>
                         <span className="text-[10px] font-black text-white uppercase">
-                          {(msg.display_name || 'S').charAt(0)}
+                          {senderName.charAt(0)}
                         </span>
                       </div>
 
                       {/* WIADOMOŚĆ */}
                       <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[75%]`}>
                         <span className="text-[8px] font-bold text-white/20 uppercase mb-1 px-1 tracking-widest">
-                          {msg.display_name}
+                          {senderName}
                         </span>
                         <div className={`px-4 py-2.5 rounded-[1.2rem] break-words w-full text-[13px] leading-relaxed border ${
                           isMe 
@@ -113,17 +115,20 @@ export function SocialView() {
               key="friends" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               className="p-5 space-y-3 overflow-y-auto h-full scrollbar-hide"
             >
-              {friends.length > 0 ? friends.map(f => (
-                <div key={f.id} className="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5 group transition-all">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarColor(f.display_name)} flex items-center justify-center border border-white/10 shadow-inner`}>
-                      <span className="text-xs font-black text-white">{f.display_name.charAt(0)}</span>
+              {friends.length > 0 ? friends.map(f => {
+                const friendName = f.display_name || "Nieznajomy";
+                return (
+                  <div key={f.id} className="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5 group transition-all">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarColor(friendName)} flex items-center justify-center border border-white/10 shadow-inner`}>
+                        <span className="text-xs font-black text-white">{friendName.charAt(0)}</span>
+                      </div>
+                      <span className="text-[13px] font-bold text-white/90">{friendName}</span>
                     </div>
-                    <span className="text-[13px] font-bold text-white/90">{f.display_name}</span>
+                    <span className="text-[10px] text-purple-400 font-mono bg-purple-500/10 px-3 py-1 rounded-lg">POZ {f.level || 1}</span>
                   </div>
-                  <span className="text-[10px] text-purple-400 font-mono bg-purple-500/10 px-3 py-1 rounded-lg">POZ {f.level}</span>
-                </div>
-              )) : (
+                );
+              }) : (
                 <div className="h-full flex items-center justify-center opacity-20 text-[9px] uppercase tracking-[0.3em] text-center px-10">
                   Sieć kontaktów offline
                 </div>

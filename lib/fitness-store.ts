@@ -117,7 +117,11 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
   
-  return { user, profile, display_name: profile?.display_name || profile?.username || user?.email?.split('@')[0] || "Operator" }
+  return { 
+    user, 
+    profile, 
+    display_name: profile?.display_name || profile?.username || user?.email?.split('@')[0] || "Operator" 
+  }
 }
 
 export function useFitnessData() {
@@ -173,7 +177,7 @@ export function useWorkoutLog() {
 export function useMessages() {
   const { data } = useSWR<ChatMessage[]>("global-messages", async () => {
     const { data: msgs } = await supabase.from('messages').select('*').order('created_at', { ascending: false }).limit(20)
-    return msgs ? msgs.reverse() : []
+    return msgs ? msgs.map(m => ({ ...m, display_name: m.display_name || "Wojownik" })).reverse() : []
   }, { refreshInterval: 2000 })
   return data || []
 }
@@ -185,7 +189,8 @@ export function useFriends() {
     if (!friendships || friendships.length === 0) return []
     const friendIds = friendships.map(f => f.friend_id)
     const { data: profiles } = await supabase.from('profiles').select('id, display_name, level, status_message').in('id', friendIds)
-    return profiles || []
+    // DODANO: Zabezpieczenie null dla display_name
+    return profiles?.map(p => ({ ...p, display_name: p.display_name || "Nieznajomy" })) || []
   })
   return data || []
 }
@@ -193,7 +198,8 @@ export function useFriends() {
 export function useAllUsers() {
   const { data } = useSWR<Friend[]>("all-profiles", async () => {
     const { data: users } = await supabase.from('profiles').select('id, display_name, level, status_message').limit(50)
-    return users || []
+    // DODANO: Zabezpieczenie null dla display_name
+    return users?.map(u => ({ ...u, display_name: u.display_name || "Wojownik" })) || []
   })
   return data || []
 }
@@ -259,7 +265,7 @@ export function syncRewardsWithLevel(level: number) {
   saveToStorage(REWARDS_KEY, updated); mutate("rewards", updated, false)
 }
 
-// --- AKCJE VAULT & PIN (DLA motivation-vault.tsx) ---
+// --- AKCJE VAULT & PIN ---
 export function getStoredPin() { return typeof window !== "undefined" ? localStorage.getItem(PIN_KEY) : null }
 export function setStoredPin(pin: string) { if (typeof window !== "undefined") localStorage.setItem(PIN_KEY, pin) }
 
@@ -354,7 +360,6 @@ export async function addWorkoutMinutes(minutes: number) {
   const newXp = (curr.xp || 0) + xpGain
   const newLevel = calculateLevelFromXp(newXp);
 
-  // Aktualizacja logu lokalnego dla MotivationVault
   const log = loadFromStorage<WorkoutLog[]>(WORKOUT_LOG_KEY, [])
   const today = getTodayString()
   const todayEntry = log.find(e => e.date === today)
