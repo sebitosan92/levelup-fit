@@ -10,7 +10,7 @@ import { SettingsView } from "@/components/settings-view"
 import { AuthScreen } from "@/components/auth-screen"
 import { LeaderboardView } from "@/components/leaderboard-view" 
 import { SocialView } from "@/components/social-view" 
-import { HabitStack } from "@/components/habit-stack" // IMPORT KOMPONENTU
+import { HabitStack } from "@/components/habit-stack" 
 import { useAuth } from "@/lib/fitness-store"
 
 export default function Home() {
@@ -55,14 +55,14 @@ export default function Home() {
             transition={{ duration: 0.2 }}
             className="w-full h-auto"
           >
-            {/* Zakładka HOME (BAZA) */}
+            {/* Zakładka HOME */}
             {activeTab === 'home' && (
               <div className="w-full px-4">
                 <Dashboard />
               </div>
             )}
 
-            {/* Zakładka DYSCYPLINA (HABITS) - NOWOŚĆ POMIĘDZY BAZĄ A SEJFEM */}
+            {/* Zakładka DYSCYPLINA (HABITS) */}
             {activeTab === 'habits' && (
               <div className="w-full px-4 pt-4 space-y-6">
                 <div className="px-1">
