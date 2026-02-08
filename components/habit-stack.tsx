@@ -294,11 +294,13 @@ export function HabitStack() {
   return (
     <div className="space-y-6 pb-24 max-w-[450px] mx-auto p-4 font-sans text-white min-h-screen">
       
+      {/* Tab Switcher */}
       <div className="flex bg-white/5 p-1 rounded-2xl border border-white/10 shadow-2xl">
         <button onClick={() => setActiveTab('habits')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'habits' ? 'bg-orange-500 text-black shadow-lg' : 'text-white/40'}`}>Protokoły</button>
         <button onClick={() => setActiveTab('vitamins')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'vitamins' ? 'bg-cyan-500 text-black shadow-lg' : 'text-white/40'}`}>Bio-Matrix</button>
       </div>
 
+      {/* Stats */}
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-orange-500/5 border border-orange-500/20 p-5 rounded-[2.5rem] relative overflow-hidden">
           <Flame className="absolute -right-2 -top-2 text-orange-500/10 w-16 h-16" />
@@ -312,12 +314,13 @@ export function HabitStack() {
         </div>
       </div>
 
-      <div className={`p-5 rounded-[2rem] border transition-all ${isUrgent ? "bg-red-500/10 border-red-500/40" : "bg-white/[0.02] border-white/5"}`}>
+      {/* Timer */}
+      <div className={`p-4 rounded-[2rem] border transition-all ${isUrgent ? "bg-red-500/10 border-red-500/40" : "bg-white/[0.02] border-white/5"}`}>
         <div className="flex items-center gap-4">
-          <ShieldAlert size={20} className={isUrgent ? "text-red-500 animate-pulse" : "text-white/20"} />
+          <ShieldAlert size={18} className={isUrgent ? "text-red-500 animate-pulse" : "text-white/20"} />
           <div>
-            <h4 className="text-[10px] font-black uppercase text-white/40 tracking-widest">Reset Systemu</h4>
-            <p className="text-xl font-mono font-bold text-white">{timeLeft}</p>
+            <h4 className="text-[9px] font-black uppercase text-white/40 tracking-widest">Reset Systemu</h4>
+            <p className="text-lg font-mono font-bold text-white">{timeLeft}</p>
           </div>
         </div>
       </div>
@@ -338,11 +341,10 @@ export function HabitStack() {
               <div className="flex justify-between items-center px-1">
                 {globalHabitHistory.map((done, i) => (
                   <div key={i} className="flex flex-col items-center gap-3">
-                    <div className={`w-10 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 relative ${done ? 'bg-orange-500/10 border border-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.1)]' : 'bg-white/[0.02] border border-white/5'}`}>
+                    <div className={`w-8 h-12 sm:w-10 sm:h-14 rounded-2xl flex items-center justify-center transition-all duration-500 relative ${done ? 'bg-orange-500/10 border border-orange-500/50' : 'bg-white/[0.02] border border-white/5'}`}>
                       <div className={`w-1.5 h-1.5 rounded-full transition-all duration-700 ${done ? 'bg-orange-500 shadow-[0_0_8px_#f97316]' : 'bg-white/10'}`} />
-                      {i === 6 && <div className="absolute inset-0 border border-orange-500/20 rounded-2xl animate-pulse" />}
                     </div>
-                    <span className={`text-[10px] font-black ${done ? 'text-white/60' : 'text-white/20'}`}>{DAYS_SHORT[i]}</span>
+                    <span className={`text-[9px] font-black ${done ? 'text-white/60' : 'text-white/20'}`}>{DAYS_SHORT[i]}</span>
                   </div>
                 ))}
               </div>
@@ -353,7 +355,7 @@ export function HabitStack() {
                 <button 
                   key={p.title} 
                   onClick={() => addHabit(p.title)} 
-                  className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-white/5 border border-white/5 rounded-xl text-[9px] font-black uppercase tracking-wider hover:bg-white/10 transition-all active:scale-95"
+                  className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/5 rounded-xl text-[9px] font-black uppercase tracking-wider active:scale-95"
                 >
                   <span className={p.color}>{p.icon}</span> {p.title}
                 </button>
@@ -362,54 +364,46 @@ export function HabitStack() {
 
             <div className="space-y-3">
               {habits.map((habit) => (
-                <div key={habit.id} className={`p-5 rounded-[2.5rem] border flex items-center justify-between transition-all ${habit.is_completed_today ? 'bg-orange-500/10 border-orange-500/30' : 'bg-white/[0.02] border-white/5'}`}>
+                <div key={habit.id} className={`p-4 rounded-[2.5rem] border flex items-center justify-between transition-all ${habit.is_completed_today ? 'bg-orange-500/10 border-orange-500/30' : 'bg-white/[0.02] border-white/5'}`}>
                   <div className="flex items-center gap-4">
-                    <button onClick={() => toggleHabit(habit)} className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${habit.is_completed_today ? 'bg-orange-500 text-black shadow-lg shadow-orange-500/20' : 'bg-white/5 text-white/20 border border-white/10'}`}>
-                      {habit.is_completed_today ? <Zap size={20} fill="currentColor" /> : <Circle size={20} />}
+                    <button onClick={() => toggleHabit(habit)} className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${habit.is_completed_today ? 'bg-orange-500 text-black shadow-lg shadow-orange-500/20' : 'bg-white/5 text-white/20 border border-white/10'}`}>
+                      {habit.is_completed_today ? <Zap size={18} fill="currentColor" /> : <Circle size={18} />}
                     </button>
                     <div>
-                      <span className={`text-sm font-bold uppercase tracking-tight ${habit.is_completed_today ? 'text-white' : 'text-white/40'}`}>{habit.title}</span>
-                      <div className="flex gap-1.5 mt-2.5">
+                      <span className={`text-xs font-bold uppercase tracking-tight ${habit.is_completed_today ? 'text-white' : 'text-white/40'}`}>{habit.title}</span>
+                      <div className="flex gap-1 mt-2">
                         {habit.history.map((done, i) => (
-                          <div key={i} className={`h-1 rounded-full transition-all ${done ? 'w-4 bg-orange-500' : 'w-1.5 bg-white/10'} ${i === 6 ? 'ring-2 ring-orange-500/20' : ''}`} />
+                          <div key={i} className={`h-1 rounded-full transition-all ${done ? 'w-3 bg-orange-500' : 'w-1 bg-white/10'}`} />
                         ))}
                       </div>
                     </div>
                   </div>
-                  <button onClick={async () => {await supabase.from('user_habits').delete().eq('id', habit.id); fetchAll()}} className="p-2 text-white/10 hover:text-red-500"><Trash2 size={16} /></button>
+                  <button onClick={async () => {await supabase.from('user_habits').delete().eq('id', habit.id); fetchAll()}} className="p-2 text-white/10"><Trash2 size={14} /></button>
                 </div>
               ))}
               <input 
                 type="text" placeholder="NOWY PROTOKÓŁ..." value={newHabitTitle}
                 onChange={(e) => setNewHabitTitle(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && addHabit(newHabitTitle)}
-                className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-5 text-[10px] font-mono text-white uppercase tracking-widest focus:outline-none focus:border-orange-500/30 transition-all"
+                className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-4 text-[10px] font-mono text-white uppercase tracking-widest focus:outline-none focus:border-orange-500/30 transition-all"
               />
             </div>
           </motion.div>
         ) : (
           <motion.div key="vitamins" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
             
-            <div className="space-y-2">
-              <div className="relative flex gap-2">
+            {/* Formularz dodawania - Poprawiony na Mobile */}
+            <div className="bg-white/5 border border-white/10 rounded-[2rem] p-4 space-y-3">
+              <div className="relative">
                 <input 
                   type="text" placeholder="NAZWA WITAMINY..." value={newVitName}
                   onChange={(e) => {setNewVitName(e.target.value); setShowSuggestions(true)}}
-                  className="flex-[2] bg-white/5 border border-white/10 rounded-xl p-4 text-[10px] font-mono uppercase focus:outline-none focus:border-cyan-500/30"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-[10px] font-mono uppercase focus:outline-none focus:border-cyan-500/30"
                 />
-                <input 
-                  type="text" placeholder="DAWKA..." value={newVitDosage}
-                  onChange={(e) => setNewVitDosage(e.target.value)}
-                  className="flex-1 bg-white/5 border border-white/10 rounded-xl p-4 text-[10px] font-mono uppercase focus:outline-none focus:border-cyan-500/30"
-                />
-                <button onClick={addVitamin} className="px-5 bg-cyan-500 text-black rounded-xl hover:bg-cyan-400 transition-all active:scale-95">
-                  <Plus size={20} />
-                </button>
-                
                 {showSuggestions && newVitName && (
-                  <div className="absolute z-50 top-full mt-2 w-full bg-[#0A0A0A] border border-white/10 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
+                  <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-[#0A0A0A] border border-white/10 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
                     {VITAMIN_SUGGESTIONS.filter(s => s.name.toLowerCase().includes(newVitName.toLowerCase())).map((s, i) => (
-                      <button key={i} onClick={() => {setNewVitName(s.name); setNewVitDosage(s.dosage); setShowSuggestions(false)}} className="w-full text-left p-4 text-[10px] hover:bg-white/5 border-b border-white/5 flex justify-between uppercase">
+                      <button key={i} onClick={() => {setNewVitName(s.name); setNewVitDosage(s.dosage); setShowSuggestions(false)}} className="w-full text-left p-3 text-[9px] hover:bg-white/5 border-b border-white/5 flex justify-between uppercase">
                         <span className="font-bold text-white">{s.name}</span>
                         <span className="text-cyan-500/50">{s.dosage}</span>
                       </button>
@@ -417,11 +411,22 @@ export function HabitStack() {
                   </div>
                 )}
               </div>
+              
+              <div className="flex gap-2">
+                <input 
+                  type="text" placeholder="DAWKA..." value={newVitDosage}
+                  onChange={(e) => setNewVitDosage(e.target.value)}
+                  className="flex-1 bg-white/5 border border-white/10 rounded-xl p-3 text-[10px] font-mono uppercase focus:outline-none"
+                />
+                <button onClick={addVitamin} className="px-6 bg-cyan-500 text-black rounded-xl hover:bg-cyan-400 active:scale-95 transition-all">
+                  <Plus size={18} />
+                </button>
+              </div>
             </div>
 
             <div className="space-y-3">
               {vitamins.map((vit) => (
-                <div key={vit.id} className={`p-5 rounded-[2.5rem] border flex items-center justify-between transition-all ${vit.taken_today ? 'bg-cyan-500/10 border-cyan-500/30' : 'bg-white/[0.02] border-white/5'}`}>
+                <div key={vit.id} className={`p-4 rounded-[2.5rem] border flex items-center justify-between transition-all ${vit.taken_today ? 'bg-cyan-500/10 border-cyan-500/30' : 'bg-white/[0.02] border-white/5'}`}>
                   <div className="flex items-center gap-4">
                     <button 
                       onClick={async () => {
@@ -429,15 +434,15 @@ export function HabitStack() {
                         await supabase.from('user_vitamins').update({ last_taken_date: vit.taken_today ? null : today }).eq('id', vit.id)
                         fetchAll()
                       }} 
-                      className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${vit.taken_today ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20' : 'bg-white/5 text-white/20 border border-white/10'}`}>
-                      {vit.taken_today ? <CheckCircle2 size={20} /> : <Pill size={20} />}
+                      className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${vit.taken_today ? 'bg-cyan-500 text-black' : 'bg-white/5 text-white/20 border border-white/10'}`}>
+                      {vit.taken_today ? <CheckCircle2 size={18} /> : <Pill size={18} />}
                     </button>
                     <div>
-                      <p className={`text-sm font-bold uppercase tracking-tight ${vit.taken_today ? 'text-white' : 'text-white/40'}`}>{vit.name}</p>
-                      <p className="text-[9px] font-mono text-cyan-500/60 uppercase mt-1 tracking-widest">DAWKA: {vit.dosage}</p>
+                      <p className={`text-xs font-bold uppercase tracking-tight ${vit.taken_today ? 'text-white' : 'text-white/40'}`}>{vit.name}</p>
+                      <p className="text-[8px] font-mono text-cyan-500/60 uppercase mt-1 tracking-widest">DAWKA: {vit.dosage}</p>
                     </div>
                   </div>
-                  <button onClick={async () => {await supabase.from('user_vitamins').delete().eq('id', vit.id); fetchAll()}} className="p-2 text-white/10 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
+                  <button onClick={async () => {await supabase.from('user_vitamins').delete().eq('id', vit.id); fetchAll()}} className="p-2 text-white/10"><Trash2 size={14} /></button>
                 </div>
               ))}
             </div>
