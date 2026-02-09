@@ -115,7 +115,7 @@ export function Dashboard() {
             <p className={`text-[10px] font-mono uppercase tracking-widest ${weatherColor}`}>
               {vibe === 'rainy' ? 'DESZCZ' : vibe === 'sunny' ? 'SŁOŃCE' : 'STANDARD'} AKTYWNY {temp !== null && `[${temp}°C]`}
             </p>
-            <h1 className="text-xl font-bold font-mono italic text-white uppercase tracking-tighter">LeveUP FIT by Seba</h1>
+            <h1 className="text-xl font-bold font-mono italic text-white uppercase tracking-tighter">LevelUP FIT by Seba</h1>
             
             <div className="pt-2">
               <ShareProgress />
