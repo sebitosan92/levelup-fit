@@ -1,33 +1,37 @@
 "use client"
 
-import React from "react"
-import { useState } from "react"
+import React, { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { User, Lock, ArrowRight, Zap } from "lucide-react"
+import { User, Lock, ArrowRight, Zap, ShieldAlert } from "lucide-react"
 import { loginUser, signupUser } from "@/lib/fitness-store"
 
 export function AuthScreen() {
   const [mode, setMode] = useState<"login" | "signup">("login")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [error, setError] = useState<string | null>(null) // Zmienione na string | null
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setError("")
+    setError(null)
 
     try {
       const result = mode === "login"
         ? await loginUser(username, password)
         : await signupUser(username, password)
 
+      // Sprawdzamy czy wynik to błąd i wyciągamy tylko tekst
       if (result && !(result as any).success) {
-        setError((result as any).error || "Błąd autoryzacji systemu")
+        const errorData = (result as any).error
+        // Jeśli błąd to obiekt, weź jego message, jeśli string - weź stringa
+        const errorMessage = typeof errorData === 'object' ? errorData.message : errorData
+        setError(errorMessage || "Błąd autoryzacji systemu")
       }
-    } catch (err) {
-      setError("Protokół połączenia przerwany")
+    } catch (err: any) {
+      // Zawsze upewnij się, że do setError trafia string
+      setError(err?.message || "Protokół połączenia przerwany")
     } finally {
       setLoading(false)
     }
@@ -73,7 +77,7 @@ export function AuthScreen() {
             <button
               key={m}
               type="button"
-              onClick={() => { setMode(m); setError("") }}
+              onClick={() => { setMode(m); setError(null) }}
               className={`flex-1 py-2.5 rounded-lg text-xs font-mono font-black transition-all ${
                 mode === m
                   ? "bg-neon-purple text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
@@ -112,14 +116,17 @@ export function AuthScreen() {
 
           <AnimatePresence mode="wait">
             {error && (
-              <motion.p
+              <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="text-xs text-red-400 font-mono text-center bg-red-500/10 py-2 rounded-lg border border-red-500/20 uppercase tracking-tighter"
+                className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20"
               >
-                {error}
-              </motion.p>
+                <ShieldAlert className="w-4 h-4 text-red-400 shrink-0" />
+                <p className="text-[10px] text-red-400 font-mono uppercase tracking-tighter leading-tight">
+                  {error}
+                </p>
+              </motion.div>
             )}
           </AnimatePresence>
 
@@ -144,7 +151,7 @@ export function AuthScreen() {
           {mode === "login" ? "Brak poświadczeń? " : "Masz już ID? "}
           <button
             type="button"
-            onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError("") }}
+            onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(null) }}
             className="text-neon-purple hover:text-neon-green transition-colors underline decoration-neon-purple/30 underline-offset-4"
           >
             {mode === "login" ? "Utwórz Profil" : "Weryfikuj ID"}
